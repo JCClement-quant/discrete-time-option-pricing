@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal
-
 import math
+import numpy as np
 
 from src.payoffs import vanilla_payoff
 from src.validation import validate_option_inputs
@@ -24,20 +24,34 @@ class OptionSpec:
     model: ModelType = "crr"
     dividend_yield: float = 0.0
 
+@dataclass
+class CRRTreeResult:
+    spot_tree: np.ndarray
+    option_tree: np.ndarray
+    exercise_tree: np.ndarray
+    intrinsic_tree: np.ndarray
+    u: float
+    d: float
+    p: float
+    dt: float
+    discount: float
+
 
 def crr_price(spec: OptionSpec) -> float:
     """
     Price a vanilla option with a Cox-Ross-Rubinstein recombining tree.
+    """
+    result = crr_tree(spec)
+    return float(result.option_tree[0, 0])
 
-    Parameters
-    ----------
-    spec : OptionSpec
-        Option specification and model inputs.
+def crr_tree(spec: OptionSpec) -> CRRTreeResult:
+    """
+    Build the CRR spot tree and option value tree.
 
     Returns
     -------
-    float
-        Present value of the option.
+    CRRTreeResult
+        Full tree result, suitable for visualization and diagnostics.
     """
     validate_option_inputs(
         spot=spec.spot,
@@ -69,22 +83,50 @@ def crr_price(spec: OptionSpec) -> float:
             "Check inputs or time-step granularity."
         )
 
-    values = []
-    for j in range(spec.steps + 1):
-        terminal_spot = spec.spot * (u ** j) * (d ** (spec.steps - j))
-        values.append(vanilla_payoff(terminal_spot, spec.strike, spec.option_type))
+    n = spec.steps
+
+    spot_tree = np.full((n + 1, n + 1), np.nan)
+    option_tree = np.full((n + 1, n + 1), np.nan)
+    intrinsic_tree = np.full((n + 1, n + 1), np.nan)
+    exercise_tree = np.full((n + 1, n + 1), False, dtype=bool)
+
+    # Build spot tree
+    for i in range(n + 1):
+        for j in range(i + 1):
+            spot_tree[i, j] = spec.spot * (u ** j) * (d ** (i - j))
+
+    # Terminal payoff
+    for j in range(n + 1):
+        intrinsic = vanilla_payoff(spot_tree[n, j], spec.strike, spec.option_type)
+        option_tree[n, j] = intrinsic
+        intrinsic_tree[n, j] = intrinsic
 
     allow_early_exercise = spec.exercise_style == "american"
 
-    for i in range(spec.steps - 1, -1, -1):
+    # Backward induction
+    for i in range(n - 1, -1, -1):
         for j in range(i + 1):
-            continuation_value = discount * (p * values[j + 1] + (1.0 - p) * values[j])
+            continuation_value = discount * (
+                p * option_tree[i + 1, j + 1] + (1.0 - p) * option_tree[i + 1, j]
+            )
+
+            intrinsic_value = vanilla_payoff(spot_tree[i, j], spec.strike, spec.option_type)
+            intrinsic_tree[i, j] = intrinsic_value
 
             if allow_early_exercise:
-                node_spot = spec.spot * (u ** j) * (d ** (i - j))
-                exercise_value = vanilla_payoff(node_spot, spec.strike, spec.option_type)
-                values[j] = max(continuation_value, exercise_value)
+                option_tree[i, j] = max(continuation_value, intrinsic_value)
+                exercise_tree[i, j] = intrinsic_value > continuation_value
             else:
-                values[j] = continuation_value
+                option_tree[i, j] = continuation_value
 
-    return values[0]
+    return CRRTreeResult(
+        spot_tree=spot_tree,
+        option_tree=option_tree,
+        exercise_tree=exercise_tree,
+        intrinsic_tree=intrinsic_tree,
+        u=u,
+        d=d,
+        p=p,
+        dt=dt,
+        discount=discount,
+    )
