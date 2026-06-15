@@ -21,12 +21,17 @@ This repository implements classical tree-based option pricing models, with an e
 - Cleaner model diagnostics
 - Optional lightweight interface for demonstration
 
-## Status
-
-Work in progress.
-
 ## References
 
 - Tomas Björk, *Arbitrage Theory in Continuous Time*
 - Steven E. Shreve, *Stochastic Calculus for Finance I*
 - Mark S. Joshi, *The Concepts and Practice of Mathematical Finance*
+- John C. Cox, Stephen A. Ross, Mark Rubinstein, *Option Pricing : A Simplified Approch* (1979)
+- Robert Jarrow, Andrew Rudd, *Approximate Option Valuation for Arbitrary Stochastic Processes* (1982)
+- Dietmar Leisen, Matthias Reimer, *Binomial Models for Option Valuation - Examining and Improving Convergence* (1995)
+- Yisong Tian, *A Modified Lattice Approach to Option Pricing* (1993, 1999)
+
+## Status
+
+Work in progress.
+

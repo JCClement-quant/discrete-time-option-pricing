@@ -23,7 +23,7 @@ DisplayMode = Literal["spot", "option", "combined"]
 def add_spec_box(
     ax,
     spec : OptionSpecLike,
-    model_name: str = "CRR",
+    model_name: str = "Jarrow-Rudd",
     u: Optional[float] = None,
     d: Optional[float] = None,
     p: Optional[float] = None,
@@ -178,6 +178,7 @@ def _draw_node_box(
 
 
 def render_binomial_tree(
+    spec: OptionSpecLike,
     spot_tree: np.ndarray,
     option_tree: Optional[np.ndarray] = None,
     exercise_tree: Optional[np.ndarray] = None,
@@ -329,11 +330,16 @@ def render_binomial_tree(
             title_value = "Binomial Spot / Option Tree"
     else: title_value = title
 
+    if spec.exercise_style == "american":
+        s = 'Blue frames: maturity nodes · Red frames: early exercise nodes'
+    else:
+        s = 'Blue frames: early exercise nodes'
+
     ax.set_title(title_value)
     ax.text(
         0.5,
         0.98,
-        "Blue frames: maturity nodes · Red frames: early exercise nodes",
+        s,
         transform=ax.transAxes,
         ha="center",
         va="bottom",

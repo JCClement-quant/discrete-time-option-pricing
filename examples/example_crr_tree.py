@@ -17,6 +17,7 @@ spec = OptionSpec(
 result = crr_tree(spec)
 
 fig, ax = render_binomial_tree(
+    spec=spec,
     spot_tree=result.spot_tree,
     option_tree=result.option_tree,
     exercise_tree=result.exercise_tree,
