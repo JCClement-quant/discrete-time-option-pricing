@@ -6,9 +6,9 @@ import numpy as np
 from src.payoffs import vanilla_payoff
 from src.validation import validate_option_inputs
 
-OptionType = Literal["call", "put"]
-ExerciseStyle = Literal["european", "american"]
-ModelType = Literal["crr", "jarrow-rudd"]
+OptionType = Literal["Call", "Put"]
+ExerciseStyle = Literal["European", "American"]
+ModelType = Literal["CRR", "Jarrow-Rudd"]
 
 
 @dataclass(frozen=True)
@@ -21,7 +21,7 @@ class OptionSpec:
     steps: int
     option_type: OptionType
     exercise_style: ExerciseStyle
-    model: ModelType = "jarrow-rudd"
+    model: ModelType = "Jarrow-Rudd"
     dividend_yield: float = 0.0
 
 @dataclass
@@ -73,7 +73,7 @@ def crr_tree(spec: OptionSpec) -> CRRTreeResult:
         steps=spec.steps,
         option_type=spec.option_type,
         exercise_style=spec.exercise_style,
-        model="crr",
+        model="CRR",
     )
 
     if spec.volatility == 0.0:
@@ -112,7 +112,7 @@ def crr_tree(spec: OptionSpec) -> CRRTreeResult:
         option_tree[n, j] = intrinsic
         intrinsic_tree[n, j] = intrinsic
 
-    allow_early_exercise = spec.exercise_style == "american"
+    allow_early_exercise = spec.exercise_style == "American"
 
     # Backward induction
     for i in range(n - 1, -1, -1):
@@ -167,7 +167,7 @@ def jr_tree(spec: OptionSpec) -> JRTreeResult:
         steps=spec.steps,
         option_type=spec.option_type,
         exercise_style=spec.exercise_style,
-        model="jarrow-rudd",
+        model="Jarrow-Rudd",
     )
 
     if spec.volatility == 0.0:
@@ -205,7 +205,7 @@ def jr_tree(spec: OptionSpec) -> JRTreeResult:
         option_tree[n, j] = intrinsic
         intrinsic_tree[n, j] = intrinsic
 
-    allow_early_exercise = spec.exercise_style == "american"
+    allow_early_exercise = spec.exercise_style == "American"
 
     # Backward induction
     for i in range(n - 1, -1, -1):

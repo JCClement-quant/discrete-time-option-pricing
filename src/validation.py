@@ -1,8 +1,8 @@
 from typing import Literal
 
-OptionType = Literal["call", "put"]
-ExerciseStyle = Literal["european", "american"]
-ModelType = Literal["crr", "jarrow-rudd"]
+OptionType = Literal["Call", "Put"]
+ExerciseStyle = Literal["European", "American"]
+ModelType = Literal["CRR", "Jarrow-Rudd"]
 
 
 def validate_option_inputs(
@@ -40,11 +40,11 @@ def validate_option_inputs(
     if not isinstance(steps, int) or steps <= 0:
         raise ValueError("steps must be a strictly positive integer")
 
-    if option_type not in ("call", "put"):
-        raise ValueError("option_type must be 'call' or 'put'")
+    if option_type not in ("Call", "Put"):
+        raise ValueError("option_type must be 'Call' or 'Put'")
 
-    if exercise_style not in ("european", "american"):
-        raise ValueError("exercise_style must be 'european' or 'american'")
+    if exercise_style not in ("European", "American"):
+        raise ValueError("exercise_style must be 'European' or 'American'")
 
-    if model not in ("crr", "jarrow-rudd"):
-        raise ValueError("model must be 'crr' or 'jarrow-rudd'")
+    if model not in ("CRR", "Jarrow-Rudd"):
+        raise ValueError("model must be 'CRR' or 'Jarrow-Rudd'")

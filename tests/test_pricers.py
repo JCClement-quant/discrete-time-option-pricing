@@ -8,12 +8,12 @@ def test_option_spec_creation():
         rate=0.01,
         volatility=0.2,
         steps=10,
-        option_type="call",
-        exercise_style="european",
-        model="crr",
+        option_type="Call",
+        exercise_style="European",
+        model="CRR",
     )
     assert spec.spot == 100.0
-    assert spec.model == "crr"
+    assert spec.model == "CRR"
 
 
 def test_crr_price_is_positive_for_atm_call():
@@ -24,9 +24,9 @@ def test_crr_price_is_positive_for_atm_call():
         rate=0.05,
         volatility=0.2,
         steps=50,
-        option_type="call",
-        exercise_style="european",
-        model="crr",
+        option_type="Call",
+        exercise_style="European",
+        model="CRR",
         dividend_yield=0.0,
     )
     price = crr_price(spec)
@@ -41,9 +41,9 @@ def test_american_put_is_not_cheaper_than_european_put():
         rate=0.05,
         volatility=0.2,
         steps=50,
-        option_type="put",
-        exercise_style="european",
-        model="crr",
+        option_type="Put",
+        exercise_style="European",
+        model="CRR",
         dividend_yield=0.0,
     )
 
@@ -54,9 +54,9 @@ def test_american_put_is_not_cheaper_than_european_put():
         rate=0.05,
         volatility=0.2,
         steps=50,
-        option_type="put",
-        exercise_style="american",
-        model="crr",
+        option_type="Put",
+        exercise_style="American",
+        model="CRR",
         dividend_yield=0.0,
     )
 
@@ -73,12 +73,12 @@ def test_option_jr_spec_creation():
         rate=0.01,
         volatility=0.2,
         steps=10,
-        option_type="call",
-        exercise_style="european",
-        model="jarrow-rudd",
+        option_type="Call",
+        exercise_style="European",
+        model="Jarrow-Rudd",
     )
     assert spec.spot == 100.0
-    assert spec.model == "jarrow-rudd"
+    assert spec.model == "Jarrow-Rudd"
 
 def test_jr_price_is_positive_for_atm_call():
     spec = OptionSpec(
@@ -88,9 +88,9 @@ def test_jr_price_is_positive_for_atm_call():
         rate=0.05,
         volatility=0.2,
         steps=50,
-        option_type="call",
-        exercise_style="european",
-        model="jarrow-rudd",
+        option_type="Call",
+        exercise_style="European",
+        model="Jarrow-Rudd",
         dividend_yield=0.0,
     )
     price = jr_price(spec)
@@ -104,9 +104,9 @@ def test_jr_american_put_is_not_cheaper_than_european_put():
         rate=0.05,
         volatility=0.2,
         steps=50,
-        option_type="put",
-        exercise_style="european",
-        model="jarrow-rudd",
+        option_type="Put",
+        exercise_style="European",
+        model="Jarrow-Rudd",
         dividend_yield=0.0,
     )
 
@@ -117,9 +117,9 @@ def test_jr_american_put_is_not_cheaper_than_european_put():
         rate=0.05,
         volatility=0.2,
         steps=50,
-        option_type="put",
-        exercise_style="american",
-        model="jarrow-rudd",
+        option_type="Put",
+        exercise_style="American",
+        model="Jarrow-Rudd",
         dividend_yield=0.0,
     )
     european_price = jr_price(european_spec)

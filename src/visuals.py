@@ -330,7 +330,7 @@ def render_binomial_tree(
             title_value = "Binomial Spot / Option Tree"
     else: title_value = title
 
-    if spec.exercise_style == "american":
+    if spec.exercise_style == "American":
         s = 'Blue frames: maturity nodes · Red frames: early exercise nodes'
     else:
         s = 'Blue frames: early exercise nodes'

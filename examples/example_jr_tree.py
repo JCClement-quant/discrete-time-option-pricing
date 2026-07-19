@@ -11,10 +11,10 @@ def main():
         maturity=1.0,
         rate=0.05,
         volatility=0.2,
-        steps=25,
-        option_type="put",
-        exercise_style="american",
-        model="jarrow-rudd",
+        steps=15,
+        option_type="Put",
+        exercise_style="American",
+        model="Jarrow-Rudd",
         dividend_yield=0.0,
     )
 

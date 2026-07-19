@@ -1,6 +1,6 @@
 from typing import Literal
 
-OptionType = Literal["call", "put"]
+OptionType = Literal["Call", "Put"]
 
 
 def call_payoff(spot: float, strike: float) -> float:
@@ -15,8 +15,8 @@ def put_payoff(spot: float, strike: float) -> float:
 
 def vanilla_payoff(spot: float, strike: float, option_type: OptionType) -> float:
     """Dispatch vanilla payoff computation by option type."""
-    if option_type == "call":
+    if option_type == "Call":
         return call_payoff(spot, strike)
-    if option_type == "put":
+    if option_type == "Put":
         return put_payoff(spot, strike)
     raise ValueError(f"Unsupported option_type: {option_type}")

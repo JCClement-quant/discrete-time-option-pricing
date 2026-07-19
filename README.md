@@ -7,9 +7,25 @@ This repository implements classical tree-based option pricing models, with an e
 - `src/validation.py`: input validation
 - `src/dates.py`: time-to-maturity helpers
 - `src/pricers.py`: tree construction and pricing logic
-- `src/visualization.py`: tree rendering utilities
+- `src/visuals.py`: tree rendering utilities
 - `notebooks/`: demonstrations and model comparisons
 - `tests/`: unit tests
+- `streamlit_app/` : webapp
+- `figures/` : samples
+- `references/` : research papers
+- `examples/` : test drive
+
+## Streamlit application
+The application provides an interactive interface for CRR and Jarrow–Rudd
+binomial option-pricing models.
+
+![Application preview](figures/Appli001.png)
+![Application preview](figures/Appli002.png)
+
+python -m streamlit run app_v1.py
+
+## Test drives
+python -m pytest -q
 
 ## Planned extensions
 

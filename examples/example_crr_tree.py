@@ -9,8 +9,8 @@ spec = OptionSpec(
     rate=0.05,
     volatility=0.2,
     steps=12,
-    option_type="put",
-    exercise_style="american",
+    option_type="Put",
+    exercise_style="American",
     dividend_yield=0.0,
 )
 
