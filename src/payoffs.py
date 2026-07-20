@@ -2,7 +2,6 @@ from typing import Literal
 
 OptionType = Literal["Call", "Put"]
 
-
 def call_payoff(spot: float, strike: float) -> float:
     """Return the payoff of a vanilla call option."""
     return max(spot - strike, 0.0)

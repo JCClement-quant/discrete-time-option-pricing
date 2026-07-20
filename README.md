@@ -16,26 +16,26 @@ This repository implements classical tree-based option pricing models, with an e
 - `examples/` : test drive
 
 ## Streamlit application
-The application provides an interactive interface for CRR and Jarrow–Rudd
+The application provides an interactive interface for CRR, Jarrow–Rudd and Tian-1993
 binomial option-pricing models.
 
 ![Application preview](figures/Appli001.png)
 ![Application preview](figures/Appli002.png)
 
-python -m streamlit run app_v1.py
+python -m streamlit run streamlit_app\app_v1.py
 
 ## Test drives
 python -m pytest -q
 
 ## Planned extensions
 
-- Tian, Leiser-Reimer
+- Tian99, Leiser-Reimer
 - Trinomial trees
 - Convergence analysis against Black-Scholes
 - Continuous dividend yield
 - FX-style carry conventions
 - Cleaner model diagnostics
-- Optional lightweight interface for demonstration
+- Greeks
 
 ## References
 

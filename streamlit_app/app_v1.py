@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from unittest import case
+
 import matplotlib.pyplot as plt
 import streamlit as st
 
-from src.pricers import OptionSpec, crr_tree, jr_tree
+from src.pricers import OptionSpec, build_binomial_tree
 from src.visuals import add_spec_box, render_binomial_tree
 
 st.set_page_config(
@@ -19,7 +21,7 @@ with st.sidebar:
 
     model_label = st.selectbox(
         "Model",
-        options=["CRR", "Jarrow–Rudd"],
+        options=["CRR", "Jarrow-Rudd", "Tian-1993"],
     )
 
     option_type = st.selectbox(
@@ -87,8 +89,6 @@ with st.sidebar:
         options=["combined", "spot", "option"],
     )
 
-model_name = "CRR" if model_label == "CRR" else "Jarrow-Rudd"
-
 spec = OptionSpec(
     spot=spot,
     strike=strike,
@@ -98,15 +98,12 @@ spec = OptionSpec(
     steps=steps,
     option_type=option_type,
     exercise_style=exercise_style,
-    model=model_name,
+    model=model_label,
     dividend_yield=dividend_yield,
 )
 
 try:
-    if model_name == "CRR":
-        result = crr_tree(spec)
-    else:
-        result = jr_tree(spec)
+    result = build_binomial_tree(spec)
 
 except ValueError as exc:
     st.error(str(exc))
