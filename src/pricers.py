@@ -24,31 +24,7 @@ class OptionSpec:
     dividend_yield: float = 0.0
 
 @dataclass
-class CRRTreeResult:
-    spot_tree: np.ndarray
-    option_tree: np.ndarray
-    exercise_tree: np.ndarray
-    intrinsic_tree: np.ndarray
-    u: float
-    d: float
-    p: float
-    dt: float
-    discount: float
-
-@dataclass
-class JRTreeResult:
-    spot_tree: np.ndarray
-    option_tree: np.ndarray
-    exercise_tree: np.ndarray
-    intrinsic_tree: np.ndarray
-    u: float
-    d: float
-    p: float
-    dt: float
-    discount: float
-
-@dataclass
-class Tian93TreeResult:
+class BinomialTreeResult:
     spot_tree: np.ndarray
     option_tree: np.ndarray
     exercise_tree: np.ndarray
@@ -66,13 +42,13 @@ def crr_price(spec: OptionSpec) -> float:
     result = crr_tree(spec)
     return float(result.option_tree[0, 0])
 
-def crr_tree(spec: OptionSpec) -> CRRTreeResult:
+def crr_tree(spec: OptionSpec) -> BinomialTreeResult:
     """
     Build the CRR spot tree and option value tree.
 
     Returns
     -------
-    CRRTreeResult
+    BinomialTreeResult
         Full tree result, suitable for visualization and diagnostics.
     """
     validate_option_inputs(
@@ -141,7 +117,7 @@ def crr_tree(spec: OptionSpec) -> CRRTreeResult:
             else:
                 option_tree[i, j] = continuation_value
 
-    return CRRTreeResult(
+    return BinomialTreeResult(
         spot_tree=spot_tree,
         option_tree=option_tree,
         exercise_tree=exercise_tree,
@@ -160,13 +136,13 @@ def jr_price(spec: OptionSpec) -> float:
     result = jr_tree(spec)
     return float(result.option_tree[0, 0])
 
-def jr_tree(spec: OptionSpec) -> JRTreeResult:
+def jr_tree(spec: OptionSpec) -> BinomialTreeResult:
     """
     Build the JR spot tree and option value tree.
 
     Returns
     -------
-    JRTreeResult
+    BinomialTreeResult
         Full tree result, suitable for visualization and diagnostics.
     """
     validate_option_inputs(
@@ -234,7 +210,7 @@ def jr_tree(spec: OptionSpec) -> JRTreeResult:
             else:
                 option_tree[i, j] = continuation_value
 
-    return JRTreeResult(
+    return BinomialTreeResult(
         spot_tree=spot_tree,
         option_tree=option_tree,
         exercise_tree=exercise_tree,
@@ -253,13 +229,13 @@ def tian93_price(spec: OptionSpec) -> float:
     result = tian93_tree(spec)
     return float(result.option_tree[0, 0])
 
-def tian93_tree(spec: OptionSpec) -> Tian93TreeResult:
+def tian93_tree(spec: OptionSpec) -> BinomialTreeResult:
     """
     Build the Tian 1993 spot tree and option value tree.
 
     Returns
     -------
-    Tian93TreeResult
+    BinomialTreeResult
         Full tree result, suitable for visualization and diagnostics.
     """
     validate_option_inputs(
@@ -328,7 +304,7 @@ def tian93_tree(spec: OptionSpec) -> Tian93TreeResult:
             else:
                 option_tree[i, j] = continuation_value
 
-    return Tian93TreeResult(
+    return BinomialTreeResult(
         spot_tree=spot_tree,
         option_tree=option_tree,
         exercise_tree=exercise_tree,
