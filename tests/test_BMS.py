@@ -39,7 +39,7 @@ def BMS(spec: OptionSpec) -> tuple[float, float]:
     )
     return float(call_bms), float(put_bms)
 
-def test_crr_call_model_is_consistent():
+def test_crr_european_call_model_is_consistent():
     spec_crr_call = OptionSpec(
         spot=100.0,
         strike=100.0,
@@ -56,7 +56,7 @@ def test_crr_call_model_is_consistent():
     print(BMS(spec_crr_call)[0])
     # assert np.abs(crr_price(spec_crr_call) - BMS(spec_crr_call)[0]) <= 1e-2
 
-def test_jr_call_model_is_consistent():
+def test_jr_european_call_model_is_consistent():
     spec_jr_call = OptionSpec(
         spot=100.0,
         strike=100.0,
@@ -73,7 +73,7 @@ def test_jr_call_model_is_consistent():
     print(BMS(spec_jr_call)[0])
     #assert np.abs(jr_price(spec_jr_call) - BMS(spec_jr_call)[0]) <= 1e-2
 
-def test_tian93_call_model_is_consistent():
+def test_tian93_european_call_model_is_consistent():
     spec_tian93_call = OptionSpec(
         spot=100.0,
         strike=100.0,
@@ -90,7 +90,7 @@ def test_tian93_call_model_is_consistent():
     print(BMS(spec_tian93_call)[0])
     #assert np.abs(tian93_price(spec_tian93_call) - BMS(spec_tian93_call)[0]) <= 1e-2
 
-def test_crr_put_model_is_consistent():
+def test_crr_european_put_model_is_consistent():
     spec_crr_put = OptionSpec(
         spot=100.0,
         strike=100.0,
@@ -107,7 +107,7 @@ def test_crr_put_model_is_consistent():
     print(BMS(spec_crr_put)[1])
     #assert np.abs(crr_price(spec_crr_put) - BMS(spec_crr_put)[0]) <= 1e-2
 
-def test_jr_put_model_is_consistent():
+def test_jr_european_put_model_is_consistent():
     spec_jr_put = OptionSpec(
         spot=100.0,
         strike=100.0,
@@ -124,7 +124,7 @@ def test_jr_put_model_is_consistent():
     print(BMS(spec_jr_put)[1])
     #assert np.abs(jr_price(spec_jr_put) - BMS(spec_jr_put)[0]) <= 1e-2
 
-def test_tian93_put_model_is_consistent():
+def test_tian93_european_put_model_is_consistent():
     spec_tian93_put = OptionSpec(
         spot=100.0,
         strike=100.0,
