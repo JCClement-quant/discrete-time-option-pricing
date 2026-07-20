@@ -190,6 +190,51 @@ def test_tian93_american_put_is_not_cheaper_than_european_put():
 
     assert american_price >= european_price
 
+def test_binomial_models_are_consistent():
+    spec_crr = OptionSpec(
+        spot=100.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.05,
+        volatility=0.2,
+        steps=50,
+        option_type="Put",
+        exercise_style="American",
+        model="CRR",
+        dividend_yield=0.0,
+    )
+    spec_jr = OptionSpec(
+        spot=100.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.05,
+        volatility=0.2,
+        steps=50,
+        option_type="Put",
+        exercise_style="American",
+        model="Jarrow-Rudd",
+        dividend_yield=0.0,
+    )
+    spec_tian93 = OptionSpec(
+        spot=100.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.05,
+        volatility=0.2,
+        steps=50,
+        option_type="Put",
+        exercise_style="American",
+        model="Tian-1993",
+        dividend_yield=0.0,
+    )
+
+    crr = crr_price(spec_crr)
+    jr = jr_price(spec_jr)
+    tian93 = tian93_price(spec_tian93)
+
+    assert abs(crr - jr) < 0.05
+    assert abs(crr - tian93) < 0.05
+
 def test_build_binomial_tree_dispatches_crr():
     spec = OptionSpec(
         spot=100.0,
@@ -225,6 +270,25 @@ def test_build_binomial_tree_dispatches_jr():
     result = build_binomial_tree(spec)
 
     assert result.option_tree.shape == (6, 6)
+
+def test_build_binomial_tree_dispatches_tian93():
+    spec = OptionSpec(
+        spot=100.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.05,
+        volatility=0.2,
+        steps=5,
+        option_type="Put",
+        exercise_style="American",
+        model="Tian-1993",
+        dividend_yield=0.0,
+    )
+
+    result = build_binomial_tree(spec)
+
+    assert result.option_tree.shape == (6, 6)
+
 
 def test_build_binomial_tree_rejects_unknown_model():
     spec = OptionSpec(
