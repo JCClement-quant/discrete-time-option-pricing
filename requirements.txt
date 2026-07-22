@@ -4,3 +4,5 @@ matplotlib
 pytest
 jupyter
 streamlit
+scipy
+pydind11

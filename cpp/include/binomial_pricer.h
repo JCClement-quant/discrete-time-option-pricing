@@ -9,6 +9,12 @@ namespace discrete_models {
 
     class Payoff {          // ABC Class
     public:
+        Payoff() = default;
+        Payoff(const Payoff&) = default;
+        Payoff& operator=(const Payoff&) = default;
+        Payoff(Payoff&&) noexcept = default;
+        Payoff& operator=(Payoff&&) noexcept = default;
+
         virtual ~Payoff() = default;
 
         [[nodiscard]]
@@ -46,7 +52,14 @@ namespace discrete_models {
 
     class VanillaOption {
         public:
-        VanillaOption(Payoff& payoff, double maturity, ExerciseStyle exercise_style);
+        VanillaOption(const Payoff& payoff,  double maturity,  ExerciseStyle exercise_style);
+
+        friend void swap(VanillaOption& lhs, VanillaOption& rhs) noexcept {
+            using std::swap;
+            swap(lhs.payoff_, rhs.payoff_);
+            swap(lhs.maturity_, rhs.maturity_);
+            swap(lhs.exercise_style_, rhs.exercise_style_);
+        }
 
         // Deep copy management
         VanillaOption(const VanillaOption& other);
@@ -57,6 +70,9 @@ namespace discrete_models {
         VanillaOption& operator=(VanillaOption&& other) noexcept = default;
 
         ~VanillaOption() = default;
+
+        [[nodiscard]]
+        double payoff(double spot) const;
 
         [[nodiscard]]
         double maturity() const noexcept;
@@ -80,5 +96,8 @@ namespace discrete_models {
     struct TreeConfig {
         int steps;
     };
+
+    [[nodiscard]]
+    double CRR_price( const VanillaOption& option, const MarketData& market, const TreeConfig& config );
 
 }  // namespace discrete_models
