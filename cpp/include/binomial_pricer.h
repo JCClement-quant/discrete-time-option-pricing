@@ -97,7 +97,23 @@ namespace discrete_models {
         int steps;
     };
 
+    struct TreeParameters {
+        double u;
+        double d;
+        double p;
+    };
+
     [[nodiscard]]
-    double CRR_price( const VanillaOption& option, const MarketData& market, const TreeConfig& config );
+    double CRR_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config);
+
+    [[nodiscard]]
+    double JR_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config);
+
+    [[nodiscard]]
+    double TIAN93_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config);
+
+    [[nodiscard]]
+    double binomial_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config,
+        const TreeParameters& TreeParams);
 
 }  // namespace discrete_models

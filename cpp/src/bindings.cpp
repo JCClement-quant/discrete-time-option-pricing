@@ -39,7 +39,21 @@ PYBIND11_MODULE(discrete_models, module) {
 
     // Linkage of the MarketData structure
     py::class_<MarketData>(module, "MarketData")
-        .def(py::init<>()) //Empty MarketData created
+        .def(py::init<>()) //Empty MarketData created !! No enough for an aggregated structure
+        .def(py::init([] (const double spot,
+                            const double rate,
+                            const double dividend_yield,
+                            const double volatility) {
+                                return MarketData {
+                                    spot,rate,dividend_yield,volatility
+                                };
+                            }
+                            ),
+                            py::arg("spot"),
+                            py::arg("rate"),
+                            py::arg("dividend_yield"),
+                            py::arg("volatility")
+        )
         .def_readwrite("spot", &MarketData::spot)
         .def_readwrite("rate", &MarketData::rate)
         .def_readwrite("dividend_yield", &MarketData::dividend_yield)
@@ -47,11 +61,27 @@ PYBIND11_MODULE(discrete_models, module) {
 
     // Linkage of TreeConfig
     py::class_<TreeConfig>(module, "TreeConfig")
-        .def(py::init<>())
+        .def(py::init<>()) //Empty MarketData created !! No enough for an aggregated structure
+        .def(py::init( [] (const int steps) {
+            return TreeConfig {
+                steps
+            };
+            }
+            ),
+            py::arg("steps")
+        )
         .def_readwrite("steps", &TreeConfig::steps);
 
     // CRR
     module.def("CRR_cpp_price", &CRR_price, py::arg("option"), py::arg("market"),
+        py::arg("treeconfig"));
+
+    // JR
+    module.def("JR_cpp_price", &JR_price, py::arg("option"), py::arg("market"),
+        py::arg("treeconfig"));
+
+    // TIAN93
+    module.def("TIAN93_cpp_price", &TIAN93_price, py::arg("option"), py::arg("market"),
         py::arg("treeconfig"));
 }
 

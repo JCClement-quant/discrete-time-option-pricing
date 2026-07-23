@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 
 # Acces to DLLs used by MinGW used by Clion
@@ -16,3 +17,7 @@ try:
     print("Module contains :", dir(discrete_models))
 except ImportError as e:
     print("Acces denied. :", e)
+
+import discrete_models
+
+__all__ = ["discrete_models"]

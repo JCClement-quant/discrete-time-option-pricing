@@ -34,6 +34,24 @@ class TreeConfig:
     steps: int
     def __init__(self)->None:...
 
+def CRR_cpp_price(
+    option: VanillaOption,
+    market: MarketData,
+    config: TreeConfig,
+) -> float: ...
+
+def JR_cpp_price(
+    option: VanillaOption,
+    market: MarketData,
+    config: TreeConfig,
+) -> float: ...
+
+def TIAN93_cpp_price(
+    option: VanillaOption,
+    market: MarketData,
+    config: TreeConfig,
+) -> float: ...
+
 # ===================================================== #
 #                       NOTES                           #
 # ===================================================== #

@@ -164,7 +164,7 @@ def jr_tree(spec: OptionSpec) -> BinomialTreeResult:
     carry_rate = spec.rate - spec.dividend_yield
 
     u = math.exp((carry_rate - 0.5 * spec.volatility**2) * dt + spec.volatility * math.sqrt(dt))
-    d = math.exp((carry_rate - 0.5 * spec.volatility**2) * dt- spec.volatility * math.sqrt(dt))
+    d = math.exp((carry_rate - 0.5 * spec.volatility**2) * dt - spec.volatility * math.sqrt(dt))
     p = 0.5
     discount = math.exp(-spec.rate * dt)
 
