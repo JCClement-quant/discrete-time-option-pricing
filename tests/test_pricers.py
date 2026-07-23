@@ -190,6 +190,207 @@ def test_tian93_american_put_is_not_cheaper_than_european_put():
 
     assert american_price >= european_price
 
+def test_american_call_without_dividend_matches_european():
+    european = OptionSpec(
+        spot=150.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.01,
+        volatility=0.20,
+        steps=1_000,
+        option_type="Call",
+        exercise_style="European",
+        model="CRR",
+        dividend_yield=0.0,
+    )
+
+    american = OptionSpec(
+        spot=150.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.01,
+        volatility=0.20,
+        steps=1_000,
+        option_type="Call",
+        exercise_style="American",
+        model="CRR",
+        dividend_yield=0.0,
+    )
+
+    assert crr_price(american) == pytest.approx(
+        crr_price(european),
+        abs=1e-10,
+    )
+
+def test_american_call_with_high_dividend_exceeds_european():
+    european = OptionSpec(
+        spot=150.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.01,
+        volatility=0.20,
+        steps=1_000,
+        option_type="Call",
+        exercise_style="European",
+        model="CRR",
+        dividend_yield=0.15,
+    )
+
+    american = OptionSpec(
+        spot=150.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.01,
+        volatility=0.20,
+        steps=1_000,
+        option_type="Call",
+        exercise_style="American",
+        model="CRR",
+        dividend_yield=0.15,
+    )
+
+    european_price = crr_price(european)
+    american_price = crr_price(american)
+
+    assert american_price >= european_price
+    assert american_price > european_price + 1.0
+    assert american_price >= american.spot - american.strike
+
+def test_american_call_decreases_when_dividend_yield_increases():
+    without_dividend = OptionSpec(
+        spot=150.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.01,
+        volatility=0.20,
+        steps=1_000,
+        option_type="Call",
+        exercise_style="American",
+        model="CRR",
+        dividend_yield=0.0,
+    )
+
+    with_dividend = OptionSpec(
+        spot=150.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.01,
+        volatility=0.20,
+        steps=1_000,
+        option_type="Call",
+        exercise_style="American",
+        model="CRR",
+        dividend_yield=0.15,
+    )
+
+    assert crr_price(with_dividend) < crr_price(without_dividend)
+
+@pytest.mark.parametrize(
+    ("model", "pricer"),
+    [
+        ("CRR", crr_price),
+        ("Jarrow-Rudd", jr_price),
+        ("Tian-1993", tian93_price),
+    ],
+)
+def test_american_call_reacts_to_dividend_yield(model, pricer):
+    common = dict(
+        spot=150.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.01,
+        volatility=0.20,
+        steps=1_000,
+        option_type="Call",
+        exercise_style="American",
+        model=model,
+    )
+
+    no_dividend = OptionSpec(
+        **common,
+        dividend_yield=0.0,
+    )
+
+    high_dividend = OptionSpec(
+        **common,
+        dividend_yield=0.15,
+    )
+
+    assert pricer(high_dividend) < pricer(no_dividend)
+
+@pytest.mark.parametrize(
+    ("model", "pricer"),
+    [
+        ("CRR", crr_price),
+        ("Jarrow-Rudd", jr_price),
+        ("Tian-1993", tian93_price),
+    ],
+)
+def test_american_put_reacts_to_dividend_yield(model, pricer):
+    common = dict(
+        spot=150.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.01,
+        volatility=0.20,
+        steps=1_000,
+        option_type="Put",
+        exercise_style="American",
+        model=model,
+    )
+
+    no_dividend = OptionSpec(
+        **common,
+        dividend_yield=0.0,
+    )
+
+    high_dividend = OptionSpec(
+        **common,
+        dividend_yield=0.15,
+    )
+
+    assert pricer(high_dividend) > pricer(no_dividend)
+
+@pytest.mark.parametrize(
+    ("model", "pricer"),
+    [
+        ("CRR", crr_price),
+        ("Jarrow-Rudd", jr_price),
+        ("Tian-1993", tian93_price),
+    ],
+)
+def test_american_put_is_not_worth_less_than_european_put(
+    model,
+    pricer,
+):
+    common = dict(
+        spot=80.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.05,
+        volatility=0.20,
+        steps=1_000,
+        option_type="Put",
+        model=model,
+        dividend_yield=0.0,
+    )
+
+    european = OptionSpec(
+        **common,
+        exercise_style="European",
+    )
+
+    american = OptionSpec(
+        **common,
+        exercise_style="American",
+    )
+
+    european_price = pricer(european)
+    american_price = pricer(american)
+
+    assert american_price >= european_price
+
+    
 def test_binomial_models_are_consistent():
     spec_crr = OptionSpec(
         spot=100.0,
