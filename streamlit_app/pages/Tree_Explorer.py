@@ -9,12 +9,12 @@ from src.pricers import OptionSpec, build_binomial_tree
 from src.visuals import add_spec_box, render_binomial_tree
 
 st.set_page_config(
-    page_title = "Discrete-Time Option Pricing",
+    page_title = "Tree Explorer",
     layout = "wide",
 )
 
 st.title("Discrete-Time Option Pricing")
-st.caption("Tree models")
+st.markdown("### Tree exploration")
 
 with st.sidebar:
     st.header("Contract and market inputs")

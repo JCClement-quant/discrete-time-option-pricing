@@ -83,7 +83,7 @@ It supports:
 Run the application with:
 
 ```bash
-python -m streamlit run streamlit_app/app_v1.py
+python -m streamlit run streamlit_app/app_main.py
 ```
 
 ### Application preview

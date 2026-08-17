@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include "binomial_pricer.h"
+#include "convergence_results.h"
 
 namespace py = pybind11;
 using namespace discrete_models;
@@ -83,5 +84,39 @@ PYBIND11_MODULE(discrete_models, module) {
     // TIAN93
     module.def("TIAN93_cpp_price", &TIAN93_price, py::arg("option"), py::arg("market"),
         py::arg("treeconfig"));
+
+    // Linkage of the ConvergenceResults structure
+    py::class_<ConvergenceResults>(module, "ConvergenceResults")
+        .def(py::init<>()) //Empty ConvergenceResults created !! No enough for an aggregated structure
+        .def(py::init([] (std::vector<int> steps,
+                            std::vector<double> crr,
+                            std::vector<double> crr_averaged,
+                            std::vector<double> jarrow_rudd,
+                            std::vector<double> tian93) {
+                                return ConvergenceResults {
+                                    steps,crr,crr_averaged,jarrow_rudd, tian93
+                                };
+                            }
+                            ),
+                            py::arg("steps"),
+                            py::arg("crr"),
+                            py::arg("crr_averaged"),
+                            py::arg("jarrow_rudd"),
+                            py::arg("tian93")
+        )
+        .def_readwrite("steps", &ConvergenceResults::steps)
+        .def_readwrite("crr", &ConvergenceResults::crr)
+        .def_readwrite("crr_averaged", &ConvergenceResults::crr_averaged)
+        .def_readwrite("jarro_rudd", &ConvergenceResults::jarrow_rudd)
+        .def_readwrite("tian93", &ConvergenceResults::tian93);
+
+    // Convergence functions
+    module.def("Binomial_Convergence", &binomial_convergence, py::arg("option"), py::arg("market"),
+        py::arg("steps_grid"));
+
+    // TEMP Convergence functions
+    module.def("Binomial_Convergence_Unthreaded", &binomial_convergence_unthreaded, py::arg("option"),
+        py::arg("market"),
+        py::arg("steps_grid"));
 }
 

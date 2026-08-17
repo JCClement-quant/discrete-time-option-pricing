@@ -333,7 +333,7 @@ def render_binomial_tree(
     if spec.exercise_style == "American":
         s = 'Blue frames: maturity nodes · Red frames: early exercise nodes'
     else:
-        s = 'Blue frames: early exercise nodes'
+        s = 'Blue frames: maturity nodes'
 
     ax.set_title(title_value)
     ax.text(
@@ -346,3 +346,4 @@ def render_binomial_tree(
         fontsize=9,
     )
     return fig, ax
+

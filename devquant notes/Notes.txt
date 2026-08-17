@@ -1,0 +1,1 @@
+14.08.2026 As per Cpp__14082026__JR_Call_US__early_exercise : un schéma convergent vers une mesure risque-neutre n’est pas nécessairement exactement martingale à chaque discrétisation finie.

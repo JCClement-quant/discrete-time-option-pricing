@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Literal
+from scipy.stats import norm
 import math
 import numpy as np
 
@@ -332,3 +333,36 @@ def build_binomial_tree(spec: OptionSpec):
             raise ValueError(
                 f"Unsupported binomial model: {spec.model!r}"
             )
+
+def BMS(spec: OptionSpec) -> tuple[float, float]:
+    sigma_sqrt_t = spec.volatility * np.sqrt(spec.maturity)
+
+    d1 = (
+         np.log(spec.spot / spec.strike)
+        + (
+        spec.rate
+        - spec.dividend_yield
+        + 0.5 * spec.volatility ** 2
+         ) * spec.maturity
+     ) / sigma_sqrt_t
+
+    d2 = d1 - sigma_sqrt_t
+
+    call_bms = (
+        norm.cdf(d1)
+        * spec.spot
+        * np.exp(-spec.dividend_yield * spec.maturity)
+        - norm.cdf(d2)
+        * spec.strike
+        * np.exp(-spec.rate * spec.maturity)
+    )
+
+    put_bms = (
+        norm.cdf(-d2)
+        * spec.strike
+        * np.exp(-spec.rate * spec.maturity)
+        - norm.cdf(-d1)
+        * spec.spot
+        * np.exp(-spec.dividend_yield * spec.maturity)
+    )
+    return float(call_bms), float(put_bms)
