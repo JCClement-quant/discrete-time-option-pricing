@@ -17,6 +17,7 @@ The project emphasizes:
 | Cox–Ross–Rubinstein | ✓ | ✓ | ✓ | ✓ |
 | Jarrow–Rudd | ✓ | ✓ | ✓ | ✓ |
 | Tian 1993 | ✓ | ✓ | ✓ | ✓ |
+| Leisen-Reimer | ✓ | ✓ | ✓ | ✓ |
 
 The current implementation supports:
 
@@ -69,7 +70,7 @@ The C++ implementation follows the same pricing conventions while providing a su
 
 ## Streamlit application
 
-The Streamlit application provides an interactive interface for the CRR, Jarrow–Rudd, and Tian-1993 models.
+The Streamlit application provides an interactive interface for the CRR, Jarrow–Rudd, Tian-1993 and Leisen-Reimer models.
 
 It supports:
 
@@ -141,7 +142,7 @@ European-option prices are also compared with their Black–Scholes–Merton lim
   - signed pricing error
   - raw CRR vs averaged CRR
 
-![Convergence](figures/Convergeance at play.png)
+![Convergence](figures/Convergeance_at_play.png)
 
 ## Performance benchmark
 
