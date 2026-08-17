@@ -124,6 +124,23 @@ These residual differences are consistent with floating-point rounding and minor
 
 European-option prices are also compared with their Black–Scholes–Merton limits.
 
+### Convergence analysis
+
+- Native C++ convergence engine exposed to Python through pybind11
+- Multithreaded convergence using `std::jthread`
+- Sequential implementation retained for validation and benchmarking
+- CRR odd/even averaging:
+  \[
+  V_N^{avg} = \frac{V_N + V_{N+1}}{2}
+  \]
+- European-option convergence benchmarked against Black-Scholes-Merton
+- Convergence diagnostics:
+  - price convergence
+  - absolute pricing error
+  - relative pricing error
+  - signed pricing error
+  - raw CRR vs averaged CRR
+
 ## Performance benchmark
 
 Both implementations use backward induction with:
@@ -151,6 +168,19 @@ Small execution times are more sensitive to:
 - operating-system scheduling;
 - background processes;
 - compiler configuration.
+
+### Multithreaded convergence
+
+The convergence batch evaluates independent tree models concurrently.
+
+Example Release benchmark:
+
+| Mode | Runtime |
+|---|---:|
+| Multithreaded | 0.467 s |
+| Sequential | 0.902 s |
+| Speedup | 1.93x |
+| Plot generation | 62 ms 
 
 Benchmark results may vary depending on hardware, compiler, optimization level, and build configuration.
 
@@ -234,8 +264,6 @@ The tests cover:
 - Tian 1999 binomial model
 - trinomial trees
 - analytical and numerical Greeks
-- richer convergence diagnostics
-- convergence-rate comparisons between models
 - discrete-dividend handling
 - batch option pricing
 - portable build configuration
@@ -268,6 +296,9 @@ The tests cover:
 
 - Mark S. Joshi,  
   *The Concepts and Practice of Mathematical Finance*
+
+- Pascal François,
+  *Les produits dérivés financiers*
 
 ## Status
 
