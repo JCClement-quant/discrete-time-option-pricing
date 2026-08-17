@@ -389,6 +389,13 @@ def plot_price_convergence(
         label="Tian 1993",
     )
 
+    ax.plot(
+        results.steps,
+        results.leisen_reimer,
+        marker="o",
+        label="Leisen-Reimer",
+    )
+
     if benchmark is not None:
         ax.axhline(
             benchmark,
@@ -445,9 +452,16 @@ def plot_relative_error(
         * 100.0
     )
 
+    lr_error = (
+        np.abs(np.asarray(results.leisen_reimer) - benchmark)
+        / denominator
+        * 100.0
+    )
+
     crr_error = np.where(crr_error > 0.0, crr_error, np.nan)
     jr_error = np.where(jr_error > 0.0, jr_error, np.nan)
     tian93_error = np.where(tian93_error > 0.0, tian93_error, np.nan)
+    lr_error = np.where(lr_error > 0.0, lr_error, np.nan)
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
 
@@ -470,6 +484,13 @@ def plot_relative_error(
         tian93_error,
         marker="o",
         label="Tian 1993",
+    )
+
+    ax.plot(
+        results.steps,
+        lr_error,
+        marker="o",
+        label="Leisen-Reimer",
     )
 
     _format_log_steps_axis(ax)
@@ -512,10 +533,15 @@ def plot_absolute_error(
         np.asarray(results.tian93) - benchmark
     )
 
+    lr_error = np.abs(
+        np.asarray(results.leisen_reimer) - benchmark
+    )
+
     # Log scale cannot display exact zero.
     crr_error = np.where(crr_error > 0.0, crr_error, np.nan)
     jr_error = np.where(jr_error > 0.0, jr_error, np.nan)
     tian93_error = np.where(tian93_error > 0.0, tian93_error, np.nan)
+    lr_error = np.where(lr_error > 0.0, lr_error, np.nan)
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
 
@@ -538,6 +564,13 @@ def plot_absolute_error(
         tian93_error,
         marker="o",
         label="Tian 1993",
+    )
+
+    ax.plot(
+        results.steps,
+        lr_error,
+        marker="o",
+        label="Leisen-Reimer",
     )
 
     _format_log_steps_axis(ax)
@@ -581,6 +614,10 @@ def plot_signed_error(
         np.asarray(results.tian93) - benchmark
     )
 
+    lr_error = (
+        np.asarray(results.leisen_reimer) - benchmark
+    )
+
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
 
     ax.plot(
@@ -602,6 +639,13 @@ def plot_signed_error(
         tian93_error,
         marker="o",
         label="Tian 1993",
+    )
+
+    ax.plot(
+        results.steps,
+        lr_error,
+        marker="o",
+        label="Leisen-Reimer",
     )
 
     _format_log_steps_axis(ax)

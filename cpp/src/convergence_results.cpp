@@ -16,6 +16,7 @@ ConvergenceResults binomial_convergence(const discrete_models::VanillaOption &op
     results.crr_averaged.reserve(steps_grid.size());
     results.jarrow_rudd.reserve(steps_grid.size());
     results.tian93.reserve(steps_grid.size());
+    results.leisen_reimer.reserve(steps_grid.size());
 
     for (const int steps : steps_grid) {
 
@@ -26,6 +27,7 @@ ConvergenceResults binomial_convergence(const discrete_models::VanillaOption &op
         double crr_n_shifted{};
         double jr_n{};
         double tian93_n{};
+        double lr_n{};
 
         std::jthread worker_crr(
             [&] {
@@ -47,16 +49,23 @@ ConvergenceResults binomial_convergence(const discrete_models::VanillaOption &op
                 tian93_n = discrete_models::TIAN93_price(option, market_data, config);
             }
         );
+        std::jthread worker_lr(
+            [&] {
+                lr_n = discrete_models::LR_price(option, market_data, config);
+    }
+);
 
         worker_crr.join();
         worker_crr_averaged.join();
         worker_jr.join();
         worker_tian93.join();
+        worker_lr.join();
 
         results.crr.push_back(crr_n);
         results.crr_averaged.push_back(0.5*(crr_n + crr_n_shifted));
         results.jarrow_rudd.push_back(jr_n);
         results.tian93.push_back(tian93_n);
+        results.leisen_reimer.push_back(lr_n);
     }
     return results;
 }
@@ -72,6 +81,7 @@ ConvergenceResults binomial_convergence_unthreaded(const discrete_models::Vanill
     results.crr_averaged.reserve(steps_grid.size());
     results.jarrow_rudd.reserve(steps_grid.size());
     results.tian93.reserve(steps_grid.size());
+    results.leisen_reimer.reserve(steps_grid.size());
 
     for (const int steps : steps_grid) {
 
@@ -82,11 +92,13 @@ ConvergenceResults binomial_convergence_unthreaded(const discrete_models::Vanill
         double crr_n_shifted = discrete_models::CRR_price(option, market_data, config_shifted);
         double jr_n = discrete_models::JR_price(option, market_data, config);
         double tian93_n = discrete_models::TIAN93_price(option, market_data, config);
+        double lr_n = discrete_models::LR_price(option, market_data, config);
 
         results.crr.push_back(crr_n);
         results.crr_averaged.push_back(0.5*(crr_n + crr_n_shifted));
         results.jarrow_rudd.push_back(jr_n);
         results.tian93.push_back(tian93_n);
+        results.leisen_reimer.push_back(lr_n);
     }
     return results;
 }

@@ -2,7 +2,7 @@ from typing import Literal
 
 OptionType = Literal["Call", "Put"]
 ExerciseStyle = Literal["European", "American"]
-ModelType = Literal["CRR", "Jarrow-Rudd", "Tian-1993"]
+ModelType = Literal["CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer"]
 
 
 def validate_option_inputs(
@@ -46,5 +46,5 @@ def validate_option_inputs(
     if exercise_style not in ("European", "American"):
         raise ValueError("exercise_style must be 'European' or 'American'")
 
-    if model not in ("CRR", "Jarrow-Rudd", "Tian-1993"):
-        raise ValueError("model must be 'CRR', 'Jarrow-Rudd' or 'Tian-1993'")
+    if model not in ("CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer"):
+        raise ValueError("model must be 'CRR', 'Jarrow-Rudd' or 'Tian-1993' or 'Leisen-Reimer")

@@ -23,6 +23,8 @@ class VanillaOption:
     def __init__(self, payoff: Payoff, maturity : float, exercise_style : ExerciseStyle) -> None:...
     def payoff(selfself, spot: float) -> float:...
     @property
+    def strike(self) -> float: ...
+    @property
     def exercise_style(self) -> ExerciseStyle:...
     @property
     def maturity(self) -> float:...
@@ -56,6 +58,12 @@ def TIAN93_cpp_price(
     config: TreeConfig,
 ) -> float: ...
 
+def LR_cpp_price(
+    option: VanillaOption,
+    market: MarketData,
+    config: TreeConfig,
+) -> float: ...
+
 StepsGrid = Sequence[int] | npt.NDArray[np.integer[Any]]
 
 class ConvergenceResults:
@@ -64,6 +72,7 @@ class ConvergenceResults:
     crr_averaged: list[float]
     jarrow_rudd: list[float]
     tian93: list[float]
+    leisen_reimer:list[float]
 
     @overload
     def __init__(self) -> None: ...
@@ -76,6 +85,7 @@ class ConvergenceResults:
         crr_averaged: Sequence[float],
         jarrow_rudd: Sequence[float],
         tian93: Sequence[float],
+        leisen_reimer: Sequence[float],
     ) -> None: ...
 
 def Binomial_Convergence(

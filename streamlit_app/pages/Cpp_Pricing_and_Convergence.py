@@ -76,9 +76,9 @@ with st.sidebar:
 
     steps = st.slider(
         "Tree steps",
-        min_value=1000,
-        max_value=50000,
-        value=5000,
+        min_value=1001,
+        max_value=50001,
+        value=5001,
         step=1000
     )
 
@@ -147,13 +147,19 @@ tian_price = discrete_models.TIAN93_cpp_price(
     config,
 )
 
+lr_price = discrete_models.LR_cpp_price(
+    option,
+    market,
+    config,
+)
+
 t_graph = 0 #Diag global variable
 if exercise_style == "European":
     if option_type == "Call":
         bms_price = BMS(spec)[0]
     else: bms_price = BMS(spec)[1]
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         st.metric(
@@ -175,10 +181,16 @@ if exercise_style == "European":
 
     with col4:
         st.metric(
+            "Leisen-Reimer",
+            f"{lr_price:.8f}",
+        )
+
+    with col5:
+        st.metric(
             "BMS",
             f"{bms_price:.8f}",
      )
-    steps_grid = [5, 10, 15, 25, 50, 100, 250, 1000, 2500, 5000, 10000]
+    steps_grid = [5, 11, 15, 25, 51, 101, 251, 1001, 2501, 5001, 10001]
 
     results = discrete_models.Binomial_Convergence(
         option,
@@ -211,7 +223,7 @@ if exercise_style == "European":
     plt.close(fig_rel)
 
 else:
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         st.metric(
@@ -231,7 +243,13 @@ else:
             f"{tian_price:.8f}",
         )
 
-    steps_grid = [5, 10, 15, 25, 50, 100, 250, 1000, 2500, 5000, 10000]
+    with col4:
+        st.metric(
+            "Leisen-Reimer",
+            f"{lr_price:.8f}",
+        )
+
+    steps_grid = [5, 11, 15, 25, 51, 101, 251, 1001, 2501, 5001, 10001]
 
     results = discrete_models.Binomial_Convergence(
         option,

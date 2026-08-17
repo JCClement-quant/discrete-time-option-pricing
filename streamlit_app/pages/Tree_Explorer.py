@@ -21,7 +21,7 @@ with st.sidebar:
 
     model_label = st.selectbox(
         "Model",
-        options=["CRR", "Jarrow-Rudd", "Tian-1993"],
+        options=["CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer"],
     )
 
     option_type = st.selectbox(
@@ -77,12 +77,21 @@ with st.sidebar:
         format="%.4f",
     )
 
-    steps = st.slider(
-        "Tree steps",
-        min_value=1,
-        max_value=20,
-        value=5,
-    )
+    if model_label == "Leisen-Reimer":
+        steps = st.slider(
+            "Tree steps",
+            min_value=1,
+            max_value=19,
+            value=5,
+            step=2,
+        )
+    else:
+        steps = st.slider(
+            "Tree steps",
+            min_value=1,
+            max_value=20,
+            value=5,
+        )
 
     display_mode = st.selectbox(
         "Node display",

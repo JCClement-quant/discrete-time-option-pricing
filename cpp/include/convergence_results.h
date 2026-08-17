@@ -7,6 +7,7 @@ struct ConvergenceResults {
     std::vector<double> crr_averaged;
     std::vector<double> jarrow_rudd;
     std::vector<double> tian93;
+    std::vector<double> leisen_reimer;
 };
 
 [[nodiscard]]

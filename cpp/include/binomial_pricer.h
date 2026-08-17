@@ -18,6 +18,9 @@ namespace discrete_models {
         virtual ~Payoff() = default;
 
         [[nodiscard]]
+        virtual double strike() const noexcept = 0;
+
+        [[nodiscard]]
         virtual double operator()(double spot) const = 0;
 
         [[nodiscard]]
@@ -27,6 +30,11 @@ namespace discrete_models {
     class PayoffCall final : public Payoff {
     public:
         explicit PayoffCall(double strike);
+
+        [[nodiscard]]
+        double strike() const noexcept override {
+            return strike_;
+        }
 
         [[nodiscard]]
         double operator()(double spot) const override;
@@ -42,6 +50,11 @@ namespace discrete_models {
         explicit PayoffPut(double strike);
 
         [[nodiscard]]
+        double strike() const noexcept override {
+            return strike_;
+        }
+
+        [[nodiscard]]
         double operator()(double spot) const override;
 
         [[nodiscard]]
@@ -53,6 +66,9 @@ namespace discrete_models {
     class VanillaOption {
         public:
         VanillaOption(const Payoff& payoff,  double maturity,  ExerciseStyle exercise_style);
+
+        [[nodiscard]]
+        double strike() const noexcept;
 
         friend void swap(VanillaOption& lhs, VanillaOption& rhs) noexcept {
             using std::swap;
@@ -111,6 +127,9 @@ namespace discrete_models {
 
     [[nodiscard]]
     double TIAN93_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config);
+
+    [[nodiscard]]
+    double LR_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config);
 
     [[nodiscard]]
     double binomial_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config,

@@ -141,6 +141,8 @@ European-option prices are also compared with their Black–Scholes–Merton lim
   - signed pricing error
   - raw CRR vs averaged CRR
 
+![Convergence](figures/Convergeance at play.png)
+
 ## Performance benchmark
 
 Both implementations use backward induction with:
@@ -204,6 +206,9 @@ The compiled extension exposes:
 - `CRR_cpp_price`
 - `JR_cpp_price`
 - `TIAN93_cpp_price`
+- `ConvergenceResults`
+- `binomial_convergence`
+- `binomial_convergence_unthreaded`
 
 Example Python usage:
 

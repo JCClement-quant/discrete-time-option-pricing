@@ -6,6 +6,7 @@ import numpy as np
 
 from src.payoffs import vanilla_payoff
 from src.validation import validate_option_inputs
+from src.functions import peizer_pratt_inversion
 
 OptionType = Literal["Call", "Put"]
 ExerciseStyle = Literal["European", "American"]
@@ -317,6 +318,117 @@ def tian93_tree(spec: OptionSpec) -> BinomialTreeResult:
         discount=discount,
     )
 
+def lr_price(spec: OptionSpec) -> float:
+    """
+    Price a vanilla option with a Leisen-Reimer recombining tree.
+    """
+    result = lr_tree(spec)
+    return float(result.option_tree[0, 0])
+
+def lr_tree(spec: OptionSpec) -> BinomialTreeResult:
+    """
+    Build the Leisen-Reimer spot tree and option value tree.
+
+    Returns
+    -------
+    BinomialTreeResult
+        Full tree result, suitable for visualization and diagnostics.
+    """
+    validate_option_inputs(
+        spot=spec.spot,
+        strike=spec.strike,
+        maturity=spec.maturity,
+        rate=spec.rate,
+        volatility=spec.volatility,
+        steps=spec.steps,
+        option_type=spec.option_type,
+        exercise_style=spec.exercise_style,
+        model="Leisen-Reimer",
+    )
+
+    if spec.volatility == 0.0:
+        raise ValueError("Leisen-Riemer tree is not defined for zero volatility in this implementation.")
+
+    if spec.steps % 2 == 0:
+        raise ValueError("Leisen-Riemer tree requires an odd number of steps for convergence.")
+
+    sigma_sqrt_t = spec.volatility * np.sqrt(spec.maturity)
+
+    d1 = (
+         np.log(spec.spot / spec.strike)
+        + (
+        spec.rate
+        - spec.dividend_yield
+        + 0.5 * spec.volatility ** 2
+         ) * spec.maturity
+     ) / sigma_sqrt_t
+
+    d2 = d1 - sigma_sqrt_t
+
+    p_prime = peizer_pratt_inversion(d1, spec.steps)
+    p = peizer_pratt_inversion(d2, spec.steps)
+
+    dt = spec.maturity / spec.steps
+    carry_rate = spec.rate - spec.dividend_yield
+    a = np.exp(carry_rate * dt)
+    u = a * p_prime / p
+    d = (a - p * u) / (1 - p)
+    discount = math.exp(-spec.rate * dt)
+
+    if not (0.0 <= p <= 1.0):
+        raise ValueError(
+            f"Risk-neutral probability out of bounds: p={p:.6f}. "
+            "Check inputs or time-step granularity."
+        )
+
+    n = spec.steps
+
+    spot_tree = np.full((n + 1, n + 1), np.nan)
+    option_tree = np.full((n + 1, n + 1), np.nan)
+    intrinsic_tree = np.full((n + 1, n + 1), np.nan)
+    exercise_tree = np.full((n + 1, n + 1), False, dtype=bool)
+
+    # Build spot tree
+    for i in range(n + 1):
+        for j in range(i + 1):
+            spot_tree[i, j] = spec.spot * (u ** j) * (d ** (i - j))
+
+    # Terminal payoff
+    for j in range(n + 1):
+        intrinsic = vanilla_payoff(spot_tree[n, j], spec.strike, spec.option_type)
+        option_tree[n, j] = intrinsic
+        intrinsic_tree[n, j] = intrinsic
+
+    allow_early_exercise = spec.exercise_style == "American"
+
+    # Backward induction
+    for i in range(n - 1, -1, -1):
+        for j in range(i + 1):
+            continuation_value = discount * (
+                p * option_tree[i + 1, j + 1] + (1.0 - p) * option_tree[i + 1, j]
+            )
+
+            intrinsic_value = vanilla_payoff(spot_tree[i, j], spec.strike, spec.option_type)
+            intrinsic_tree[i, j] = intrinsic_value
+
+            if allow_early_exercise:
+                option_tree[i, j] = max(continuation_value, intrinsic_value)
+                exercise_tree[i, j] = intrinsic_value > continuation_value
+            else:
+                option_tree[i, j] = continuation_value
+
+    return BinomialTreeResult(
+        spot_tree=spot_tree,
+        option_tree=option_tree,
+        exercise_tree=exercise_tree,
+        intrinsic_tree=intrinsic_tree,
+        u=u,
+        d=d,
+        p=p,
+        dt=dt,
+        discount=discount,
+    )
+
 
 def build_binomial_tree(spec: OptionSpec):
     match spec.model:
@@ -328,6 +440,9 @@ def build_binomial_tree(spec: OptionSpec):
 
         case "Tian-1993":
             return tian93_tree(spec)
+
+        case "Leisen-Reimer":
+            return lr_tree(spec)
 
         case _:
             raise ValueError(

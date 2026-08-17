@@ -17,6 +17,7 @@ set(CORE_FILES
         src/binomial_pricer.cpp
         src/convergence_results.cpp
         include/convergence_results.h
+        src/functions.cpp
 )
 
 # =====================================================================

@@ -57,7 +57,7 @@ int main() {
     cout << "Prix JR du put europeen : " << price << endl;
     price = TIAN93_price(option_put_eu, market_data, tree_config);
     cout << "Prix TIAN93 du put europeen : " << price << endl;
-    */
+
 
     std::vector<int> steps = {5,10,15,25,50,100,250,500,1000,2500,5000,10000,25000,50000};
     auto start_thread = std::chrono::high_resolution_clock::now();
@@ -94,6 +94,24 @@ int main() {
     const double efficiency = speedup / 4.0;
     cout << "speedup = " << speedup << endl << endl;
     cout << "efficency = " << efficiency << endl << endl;
+    */
+
+    double price = CRR_price(option_call_eu, market_data, tree_config);
+    cout << "Prix CRR du call europeen : " << price << endl;
+    price = JR_price(option_call_eu, market_data, tree_config);
+    cout << "Prix LR du call europeen : " << price << endl;
+    price = CRR_price(option_call_us, market_data, tree_config);
+    cout << "Prix CRR du call americain : " << price << endl;
+    price = JR_price(option_call_us, market_data, tree_config);
+    cout << "Prix LR du call americain : " << price << endl;
+    price = CRR_price(option_put_eu, market_data, tree_config);
+    cout << "Prix CRR du put europeen : " << price << endl;
+    price = JR_price(option_put_eu, market_data, tree_config);
+    cout << "Prix LR du put europeen : " << price << endl;
+    price = CRR_price(option_put_us, market_data, tree_config);
+    cout << "Prix CRR du put americain : " << price << endl;
+    price = JR_price(option_put_us, market_data, tree_config);
+    cout << "Prix LR du put americain: " << price << endl;
 
     return 0;
 }
