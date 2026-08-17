@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include "binomial_pricer.h"
 #include "convergence_results.h"
 
@@ -107,7 +108,7 @@ PYBIND11_MODULE(discrete_models, module) {
         .def_readwrite("steps", &ConvergenceResults::steps)
         .def_readwrite("crr", &ConvergenceResults::crr)
         .def_readwrite("crr_averaged", &ConvergenceResults::crr_averaged)
-        .def_readwrite("jarro_rudd", &ConvergenceResults::jarrow_rudd)
+        .def_readwrite("jarrow_rudd", &ConvergenceResults::jarrow_rudd)
         .def_readwrite("tian93", &ConvergenceResults::tian93);
 
     // Convergence functions

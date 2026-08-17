@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-from typing import Literal, Optional, Protocol
+from typing import Literal, Optional, Protocol, TYPE_CHECKING
 
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
+from matplotlib.figure import Figure
+import matplotlib.ticker as ticker
+
+if TYPE_CHECKING:
+    from discrete_models import ConvergenceResults
 
 class OptionSpecLike(Protocol):
     spot: float
@@ -347,3 +352,361 @@ def render_binomial_tree(
     )
     return fig, ax
 
+def _format_log_steps_axis(ax) -> None:
+    ax.set_xscale("log")
+
+    ax.xaxis.set_major_formatter(
+        ticker.FuncFormatter(
+            lambda x, pos: f"{x:g}"
+        )
+    )
+
+def plot_price_convergence(
+    results: "ConvergenceResults",
+    benchmark: float | None = None,
+) -> Figure:
+
+    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+
+    ax.plot(
+        results.steps,
+        results.crr_averaged,
+        marker="o",
+        label="CRR averaged",
+    )
+
+    ax.plot(
+        results.steps,
+        results.jarrow_rudd,
+        marker="o",
+        label="Jarrow-Rudd",
+    )
+
+    ax.plot(
+        results.steps,
+        results.tian93,
+        marker="o",
+        label="Tian 1993",
+    )
+
+    if benchmark is not None:
+        ax.axhline(
+            benchmark,
+            linestyle="--",
+            label="Black-Scholes",
+        )
+
+    ax.set_xlabel("Number of steps")
+    ax.set_ylabel("Option price")
+    ax.set_title("Binomial price convergence")
+    ax.set_xscale("log")
+    ax.xaxis.set_major_formatter(
+        ticker.FuncFormatter(
+            lambda x, pos: f"{x:g}"
+        )
+    )
+
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+
+    fig.tight_layout()
+
+    return fig
+
+def plot_relative_error(
+    results: "ConvergenceResults",
+    benchmark: float,
+) -> Figure:
+
+    if benchmark == 0.0:
+        raise ValueError(
+            "Relative error is undefined for a zero benchmark."
+        )
+
+    steps = np.asarray(results.steps)
+
+    denominator = abs(benchmark)
+
+    crr_error = (
+        np.abs(np.asarray(results.crr_averaged) - benchmark)
+        / denominator
+        * 100.0
+    )
+
+    jr_error = (
+        np.abs(np.asarray(results.jarrow_rudd) - benchmark)
+        / denominator
+        * 100.0
+    )
+
+    tian93_error = (
+        np.abs(np.asarray(results.tian93) - benchmark)
+        / denominator
+        * 100.0
+    )
+
+    crr_error = np.where(crr_error > 0.0, crr_error, np.nan)
+    jr_error = np.where(jr_error > 0.0, jr_error, np.nan)
+    tian93_error = np.where(tian93_error > 0.0, tian93_error, np.nan)
+
+    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+
+    ax.plot(
+        steps,
+        crr_error,
+        marker="o",
+        label="CRR averaged",
+    )
+
+    ax.plot(
+        steps,
+        jr_error,
+        marker="o",
+        label="Jarrow-Rudd",
+    )
+
+    ax.plot(
+        steps,
+        tian93_error,
+        marker="o",
+        label="Tian 1993",
+    )
+
+    _format_log_steps_axis(ax)
+
+    ax.set_yscale("log")
+
+    ax.yaxis.set_major_formatter(
+        ticker.FuncFormatter(
+            lambda y, pos: f"{y:g}%"
+        )
+    )
+
+    ax.set_xlabel("Number of steps")
+    ax.set_ylabel("Relative pricing error")
+    ax.set_title("Relative convergence error")
+
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+
+    fig.tight_layout()
+
+    return fig
+
+def plot_absolute_error(
+    results: "ConvergenceResults",
+    benchmark: float,
+) -> Figure:
+
+    steps = np.asarray(results.steps)
+
+    crr_error = np.abs(
+        np.asarray(results.crr_averaged) - benchmark
+    )
+
+    jr_error = np.abs(
+        np.asarray(results.jarrow_rudd) - benchmark
+    )
+
+    tian93_error = np.abs(
+        np.asarray(results.tian93) - benchmark
+    )
+
+    # Log scale cannot display exact zero.
+    crr_error = np.where(crr_error > 0.0, crr_error, np.nan)
+    jr_error = np.where(jr_error > 0.0, jr_error, np.nan)
+    tian93_error = np.where(tian93_error > 0.0, tian93_error, np.nan)
+
+    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+
+    ax.plot(
+        steps,
+        crr_error,
+        marker="o",
+        label="CRR averaged",
+    )
+
+    ax.plot(
+        steps,
+        jr_error,
+        marker="o",
+        label="Jarrow-Rudd",
+    )
+
+    ax.plot(
+        steps,
+        tian93_error,
+        marker="o",
+        label="Tian 1993",
+    )
+
+    _format_log_steps_axis(ax)
+
+    ax.set_yscale("log")
+
+    # Avoid MathText formatting on the logarithmic y-axis too.
+    ax.yaxis.set_major_formatter(
+        ticker.FuncFormatter(
+            lambda y, pos: f"{y:.0e}"
+        )
+    )
+
+    ax.set_xlabel("Number of steps")
+    ax.set_ylabel("Absolute pricing error")
+    ax.set_title("Absolute convergence error")
+
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+
+    fig.tight_layout()
+
+    return fig
+
+def plot_signed_error(
+    results: "ConvergenceResults",
+    benchmark: float,
+) -> Figure:
+
+    steps = np.asarray(results.steps)
+
+    crr_error = (
+        np.asarray(results.crr_averaged) - benchmark
+    )
+
+    jr_error = (
+        np.asarray(results.jarrow_rudd) - benchmark
+    )
+
+    tian93_error = (
+        np.asarray(results.tian93) - benchmark
+    )
+
+    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+
+    ax.plot(
+        steps,
+        crr_error,
+        marker="o",
+        label="CRR averaged",
+    )
+
+    ax.plot(
+        steps,
+        jr_error,
+        marker="o",
+        label="Jarrow-Rudd",
+    )
+
+    ax.plot(
+        steps,
+        tian93_error,
+        marker="o",
+        label="Tian 1993",
+    )
+
+    _format_log_steps_axis(ax)
+
+    ax.axhline(
+        0.0,
+        linestyle="--",
+        linewidth=1.0,
+        label="Benchmark",
+    )
+
+    ax.set_xlabel("Number of steps")
+    ax.set_ylabel("Signed pricing error")
+    ax.set_title("Signed convergence error")
+
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+
+    fig.tight_layout()
+
+    return fig
+
+def plot_crr_smoothing(
+    results: "ConvergenceResults",
+    benchmark: float,
+) -> Figure:
+
+    steps = np.asarray(results.steps)
+
+    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+
+    ax.plot(
+        steps,
+        results.crr,
+        marker="o",
+        label="CRR raw",
+    )
+
+    ax.plot(
+        steps,
+        results.crr_averaged,
+        marker="o",
+        label="CRR averaged",
+    )
+
+    ax.axhline(
+        benchmark,
+        linestyle="--",
+        linewidth=1.0,
+        label="Black-Scholes",
+    )
+
+    _format_log_steps_axis(ax)
+
+    ax.set_xlabel("Number of steps")
+    ax.set_ylabel("Option price")
+    ax.set_title("CRR odd/even smoothing")
+
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+
+    fig.tight_layout()
+
+    return fig
+
+def plot_convergence_performance(
+    threaded_time: float,
+    unthreaded_time: float,
+) -> Figure:
+
+    labels = [
+        "Threaded",
+        "Unthreaded",
+    ]
+
+    times = [
+        threaded_time,
+        unthreaded_time,
+    ]
+
+    fig, ax = plt.subplots(figsize=(6.0, 4.0))
+
+    bars = ax.bar(
+        labels,
+        times,
+    )
+
+    ax.set_ylabel("Wall-clock time (s)")
+    ax.set_title("Convergence computation performance")
+
+    ax.grid(
+        True,
+        axis="y",
+        alpha=0.3,
+    )
+
+    for bar, value in zip(bars, times):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height(),
+            f"{value:.3f} s",
+            ha="center",
+            va="bottom",
+        )
+
+    fig.tight_layout()
+
+    return fig

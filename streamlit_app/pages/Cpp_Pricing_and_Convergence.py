@@ -5,6 +5,10 @@ import streamlit as st
 
 from src.pricers import OptionSpec, BMS
 from linker_cpp import discrete_models
+from src.visuals import (plot_price_convergence, plot_absolute_error, plot_relative_error,
+                         plot_signed_error, plot_convergence_performance, plot_crr_smoothing)
+import matplotlib.pyplot as plt
+from time import perf_counter
 
 st.set_page_config(
     page_title = "C++ Pricing",
@@ -143,32 +147,160 @@ tian_price = discrete_models.TIAN93_cpp_price(
     config,
 )
 
-if option_type == "Call":
-    bms_price = BMS(spec)[0]
-else: bms_price = BMS(spec)[1]
+t_graph = 0 #Diag global variable
+if exercise_style == "European":
+    if option_type == "Call":
+        bms_price = BMS(spec)[0]
+    else: bms_price = BMS(spec)[1]
 
-col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4)
 
-with col1:
-    st.metric(
-        "CRR averaged",
-        f"{(crr_price+crr_price_shifted)/2:.8f}",
+    with col1:
+        st.metric(
+            "CRR averaged",
+            f"{(crr_price+crr_price_shifted)/2:.8f}",
+        )
+
+    with col2:
+        st.metric(
+            "Jarrow-Rudd",
+            f"{jr_price:.8f}",
+        )
+
+    with col3:
+        st.metric(
+            "Tian 1993",
+            f"{tian_price:.8f}",
+        )
+
+    with col4:
+        st.metric(
+            "BMS",
+            f"{bms_price:.8f}",
+     )
+    steps_grid = [5, 10, 15, 25, 50, 100, 250, 1000, 2500, 5000, 10000]
+
+    results = discrete_models.Binomial_Convergence(
+        option,
+        market,
+        steps_grid,
+    )
+    t_graph = perf_counter()
+    fig_price = plot_price_convergence(
+        results,
+        benchmark=bms_price,
+    )
+    fig_abs = plot_absolute_error(
+        results,
+        benchmark=bms_price
     )
 
-with col2:
-    st.metric(
-        "Jarrow-Rudd",
-        f"{jr_price:.8f}",
+    fig_rel = plot_relative_error(
+        results,
+        benchmark=bms_price
     )
 
-with col3:
-    st.metric(
-        "Tian 1993",
-        f"{tian_price:.8f}",
+    plot_build_time = perf_counter() - t_graph
+
+    st.pyplot(fig_price, width='content')
+    st.pyplot(fig_abs, width='content')
+    st.pyplot(fig_rel, width='content')
+
+    plt.close(fig_price)
+    plt.close(fig_abs)
+    plt.close(fig_rel)
+
+else:
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric(
+            "CRR averaged",
+            f"{(crr_price + crr_price_shifted) / 2:.8f}",
+        )
+
+    with col2:
+        st.metric(
+            "Jarrow-Rudd",
+            f"{jr_price:.8f}",
+        )
+
+    with col3:
+        st.metric(
+            "Tian 1993",
+            f"{tian_price:.8f}",
+        )
+
+    steps_grid = [5, 10, 15, 25, 50, 100, 250, 1000, 2500, 5000, 10000]
+
+    results = discrete_models.Binomial_Convergence(
+        option,
+        market,
+        steps_grid,
+    )
+    t_graph = perf_counter()
+    fig_price = plot_price_convergence(
+        results,
+    )
+    plot_build_time = perf_counter() - t_graph
+
+    st.pyplot(fig_price)
+    plt.close(fig_price)
+
+t0 = perf_counter()
+results = discrete_models.Binomial_Convergence(
+    option,
+    market,
+    steps_grid,
+)
+threaded_time = perf_counter() - t0
+
+t0 = perf_counter()
+results_unthreaded = discrete_models.Binomial_Convergence_Unthreaded(
+    option,
+    market,
+    steps_grid,
+)
+unthreaded_time = perf_counter() - t0
+speedup = unthreaded_time / threaded_time
+
+
+
+with st.expander("Advanced diagnostics"):
+
+    if exercise_style == "European":
+        fig_signed = plot_signed_error(
+            results,
+            benchmark=bms_price,
+        )
+
+        st.pyplot(fig_signed, width='content')
+        plt.close(fig_signed)
+
+        fig_crr = plot_crr_smoothing(
+            results,
+            benchmark=bms_price,
+        )
+
+        st.pyplot(fig_crr)
+        plt.close(fig_crr)
+
+    col3, col4 = st.columns(2)
+
+    col3.metric(
+        "Speedup",
+        f"{speedup:.2f}×",
     )
 
-with col4:
-    st.metric(
-        "BMS",
-        f"{bms_price:.8f}",
- )
+    col4.metric(
+        "Plot generation",
+        f"{plot_build_time * 1000:.0f} ms",
+    )
+
+    fig_perf = plot_convergence_performance(
+        threaded_time,
+        unthreaded_time,
+    )
+
+    st.pyplot(fig_perf)
+    plt.close(fig_perf)

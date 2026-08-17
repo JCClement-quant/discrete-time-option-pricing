@@ -244,7 +244,7 @@ namespace discrete_models {
 
         // Exercise
         const bool is_american = option.exercise_style() == ExerciseStyle::American;
-        std::size_t early_exercise_count = 0;
+        // std::size_t early_exercise_count = 0;
 
         // Lowest spot at time (steps - 1)
         // double lowest_spot = market.spot * std::pow(treeparams.d, treeconfig.steps - 1);
@@ -266,9 +266,11 @@ namespace discrete_models {
                     //current_spot = base_spot * std::pow(u_over_d, j);
 
                     const double intrisic = option.payoff(current_spot);
+                    /*
                     if (intrisic > continuation_value) {
                         early_exercise_count++;
                     }
+                    */
                     current_spot *= u_over_d;
                 } else {
                     value = continuation_value;
@@ -276,9 +278,11 @@ namespace discrete_models {
                 }
             base_spot /= treeparams.d;
         }
+        /*
         if (is_american){
         std::cout << "Early exercise count: " << early_exercise_count << std::endl;
         }
+        */
         return option_values.front();
     }
 }

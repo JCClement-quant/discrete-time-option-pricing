@@ -1,4 +1,8 @@
 from enum import Enum
+from _collections_abc import Sequence
+from typing import Any, overload
+import numpy as np
+import numpy.typing as npt
 
 # Helps PyCharm to acknowledge module discrete_models
 
@@ -52,6 +56,41 @@ def TIAN93_cpp_price(
     config: TreeConfig,
 ) -> float: ...
 
+StepsGrid = Sequence[int] | npt.NDArray[np.integer[Any]]
+
+class ConvergenceResults:
+    steps: list[int]
+    crr: list[float]
+    crr_averaged: list[float]
+    jarrow_rudd: list[float]
+    tian93: list[float]
+
+    @overload
+    def __init__(self) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        steps: StepsGrid,
+        crr: Sequence[float],
+        crr_averaged: Sequence[float],
+        jarrow_rudd: Sequence[float],
+        tian93: Sequence[float],
+    ) -> None: ...
+
+def Binomial_Convergence(
+    option: VanillaOption,
+    market: MarketData,
+    steps_grid: StepsGrid,
+) -> ConvergenceResults: ...
+
+
+def Binomial_Convergence_Unthreaded(
+    option: VanillaOption,
+    market: MarketData,
+    steps_grid: StepsGrid,
+) -> ConvergenceResults: ...
+
 # ===================================================== #
 #                       NOTES                           #
 # ===================================================== #
@@ -66,5 +105,10 @@ def TIAN93_cpp_price(
 #   void in C++... PyCharm needs the line               #
 #   def __init__(self) -> None: ... to allow ()         #
 #   instantiation in Python.                            #
-#                                                       #
+# Structure ConvergenceResults                          #
+#   std::vector is genuinely converted into a native    #
+#   Python container, list. However, the return is      #
+#   Sequence[int] | npt.NDArray[np.integer[Any]] to     #
+#   widen the range of choices of Python collectors on  #
+#   the user side : list, tuple, Numpy.                 #
 # ===================================================== #
