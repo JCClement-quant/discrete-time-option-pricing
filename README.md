@@ -12,12 +12,13 @@ The project emphasizes:
 
 ## Implemented models
 
-| Model | Python | C++ | European exercise | American exercise |
-|:------|:------:|:---:|:-----------------:|:-----------------:|
-| Cox–Ross–Rubinstein | ✓ | ✓ | ✓ | ✓ |
-| Jarrow–Rudd | ✓ | ✓ | ✓ | ✓ |
-| Tian 1993 | ✓ | ✓ | ✓ | ✓ |
-| Leisen-Reimer | ✓ | ✓ | ✓ | ✓ |
+| Model                | Python | C++ | European exercise | American exercise |
+|:---------------------|:------:|:---:|:-----------------:|:-----------------:|
+| Cox–Ross–Rubinstein  | ✓ | ✓ |        ✓         |        ✓         |
+| Jarrow–Rudd          | ✓ | ✓ |        ✓         |        ✓         |
+| Tian 1993            | ✓ | ✓ |        ✓         |        ✓         |
+| Leisen-Reimer        | ✓ | ✓ |        ✓         |        ✓         |
+| Black-Merton-Scholes | ✓ | ✓ |         ✓         |         x         |
 
 The current implementation supports:
 
@@ -46,6 +47,8 @@ The current implementation supports:
 - `streamlit_app/`: interactive web application
 - `figures/`: screenshots and sample output
 - `references/`: research papers and supporting material
+- `devquant notes/`: useful notes on code or models
+- `performance/`: coding implementation benchmark
 
 ## Architecture
 
@@ -61,6 +64,7 @@ Each binomial model is therefore responsible only for its own calibration:
 - Cox–Ross–Rubinstein determines its specific \(u\), \(d\), and \(p\);
 - Jarrow–Rudd determines its specific \(u\), \(d\), and \(p\);
 - Tian 1993 determines its specific \(u\), \(d\), and \(p\).
+- Leisen-Reimer builds its specific \(u\), \(d\), and \(p\) out of BMS (d1) and (d2) through Peizer and Pratt's inversion
 
 The resulting parameters are then passed to a shared pricing engine.
 
@@ -74,12 +78,25 @@ The Streamlit application provides an interactive interface for the CRR, Jarrow�
 
 It supports:
 
+### Page 🌳 Tree Explorer
+
 - model selection;
 - option and market parameters;
 - European and American exercise;
 - call and put pricing;
 - continuous dividend yield;
 - graphical inspection of small binomial trees.
+
+### Page Cpp 🧮 Cpp High-Performance Pricing
+
+- option and market parameters;
+- European and American exercise;
+- call and put pricing;
+- continuous dividend yield;
+- CRR averaged, JR, TIAN93, LR prices for N>1000;
+- BMS benchmark for European option;
+- convergence, absolute and relative error;
+- performance analysis.
 
 Run the application with:
 
@@ -102,18 +119,22 @@ The C++ implementations are tested directly against their Python counterparts fo
 - Jarrow–Rudd European calls;
 - Jarrow–Rudd American puts;
 - Tian-1993 European calls;
-- Tian-1993 American puts.
+- Tian-1993 American puts;
+- Leisen-Reimer European calls;
+- Leisen-Reimer American puts.
 
 At 10,000 time steps, the observed absolute Python/C++ differences were:
 
-| Model | Option | Absolute difference |
-|:------|:-------|--------------------:|
-| CRR | European call | `3.7428e-12` |
-| CRR | American put | `1.5490e-12` |
-| Jarrow–Rudd | European call | `6.2883e-13` |
-| Jarrow–Rudd | American put | `2.6468e-13` |
-| Tian 1993 | European call | `8.5443e-12` |
-| Tian 1993 | American put | `3.3715e-12` |
+| Model         | Option | Absolute difference |
+|:--------------|:-------|--------------------:|
+| CRR           | European call | `3.7428e-12` |
+| CRR           | American put | `1.5490e-12` |
+| Jarrow–Rudd   | European call | `6.2883e-13` |
+| Jarrow–Rudd   | American put | `2.6468e-13` |
+| Tian 1993     | European call | `8.5443e-12` |
+| Tian 1993     | American put | `3.3715e-12` |
+| Leisen-Reimer | European call | `3.5882e-12` |
+| Leisen-Reimer     | American put | `1.4921e-12` |
 
 The largest observed difference was approximately:
 
@@ -131,9 +152,9 @@ European-option prices are also compared with their Black–Scholes–Merton lim
 - Multithreaded convergence using `std::jthread`
 - Sequential implementation retained for validation and benchmarking
 - CRR odd/even averaging:
-  \[
-  V_N^{avg} = \frac{V_N + V_{N+1}}{2}
-  \]
+$$
+V_N^{\mathrm{avg}} = \frac{V_N + V_{N+1}}{2}
+$$
 - European-option convergence benchmarked against Black-Scholes-Merton
 - Convergence diagnostics:
   - price convergence
@@ -207,6 +228,7 @@ The compiled extension exposes:
 - `CRR_cpp_price`
 - `JR_cpp_price`
 - `TIAN93_cpp_price`
+- `LR_cpp_price`
 - `ConvergenceResults`
 - `binomial_convergence`
 - `binomial_convergence_unthreaded`
@@ -260,13 +282,13 @@ The tests cover:
 - input validation;
 - European and American exercise;
 - Python model convergence;
-- comparison with Black–Scholes–Merton;
+- comparison with Black–Scholes–Merton for European exercise;
 - Python/C++ numerical parity;
-- CRR, Jarrow–Rudd, and Tian-1993 implementations.
+- CRR, Jarrow–Rudd, Tian-1993 and Leisen-Reimer implementations.
 
 ## Planned extensions
 
-- Leisen–Reimer binomial model
+- BAW for American exercise
 - Tian 1999 binomial model
 - trinomial trees
 - analytical and numerical Greeks
@@ -290,7 +312,19 @@ The tests cover:
   *A Modified Lattice Approach to Option Pricing* (1993)
 
 - Dietmar Leisen and Matthias Reimer,  
-  *Binomial Models for Option Valuation — Examining and Improving Convergence*
+  *Binomial Models for Option Valuation — Examining and Improving Convergence* (1995)
+
+- Giovanni Barone-Adessi and Robert Whaley,   
+ *Efficient Analytic Approximation of American Option Values*
+
+### Useful papers
+
+- Minqiang Li,   
+ *Analytical Approximations for the Critical Stock Prices of American Options — A performance comparision* (2009)
+- Mark Joshi,   
+ *The Convergence of Binomial Trees for Pricing the American Put*  (2009)
+- Mark Joshi,   
+ *Achieving Higher Order Convergence for the Prices of European Options in Binomial Trees*  (2007)
 
 ### Textbooks
 
@@ -310,7 +344,7 @@ The tests cover:
 
 Active development.
 
-The CRR, Jarrow–Rudd, and Tian-1993 models are operational in both Python and C++.
+The CRR, Jarrow–Rudd, Tian-1993 and LR models are operational in both Python and C++.
 
 The project currently supports:
 

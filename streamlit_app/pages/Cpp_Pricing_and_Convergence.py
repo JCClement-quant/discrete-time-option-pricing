@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import streamlit as st
 
-from src.pricers import OptionSpec, BMS
+from src.pricers import OptionSpec, BMS, BAW_call
 from linker_cpp import discrete_models
 from src.visuals import (plot_price_convergence, plot_absolute_error, plot_relative_error,
                          plot_signed_error, plot_convergence_performance, plot_crr_smoothing)
@@ -223,7 +223,8 @@ if exercise_style == "European":
     plt.close(fig_rel)
 
 else:
-    col1, col2, col3, col4 = st.columns(4)
+    baw_price = BAW_call(spec, spot)
+    col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         st.metric(
@@ -249,6 +250,12 @@ else:
             f"{lr_price:.8f}",
         )
 
+    with col5:
+        st.metric(
+            "BAW",
+            f"{baw_price:.8f}",
+        )
+
     steps_grid = [5, 11, 15, 25, 51, 101, 251, 1001, 2501, 5001, 10001]
 
     results = discrete_models.Binomial_Convergence(
@@ -262,7 +269,7 @@ else:
     )
     plot_build_time = perf_counter() - t_graph
 
-    st.pyplot(fig_price)
+    st.pyplot(fig_price, width='content')
     plt.close(fig_price)
 
 t0 = perf_counter()
