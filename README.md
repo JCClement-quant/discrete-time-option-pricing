@@ -18,7 +18,8 @@ The project emphasizes:
 | Jarrow–Rudd          | ✓ | ✓ |        ✓         |        ✓         |
 | Tian 1993            | ✓ | ✓ |        ✓         |        ✓         |
 | Leisen-Reimer        | ✓ | ✓ |        ✓         |        ✓         |
-| Black-Merton-Scholes | ✓ | ✓ |         ✓         |         x         |
+| Black-Merton-Scholes | ✓ | ✓ |         ✓         |         ✓         |
+| Barone_Adessi-Whiley | ✓ | ✓ |        BMS        |         ✓         |
 
 The current implementation supports:
 

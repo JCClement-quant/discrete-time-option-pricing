@@ -451,6 +451,16 @@ def build_binomial_tree(spec: OptionSpec):
             )
 
 def BMS_d1_d2(spec: OptionSpec, spot: float) -> tuple[float, float]:
+    """
+    Calculates BMS d1 and d2 parameters
+    :param spec : option spec
+    :param spot : float, spot input
+
+    Returns
+    -------
+    Tuple[float, float]
+    d1,d2
+    """
 
     sigma_sqrt_t = (spec.volatility * np.sqrt(spec.maturity))
 
@@ -468,7 +478,15 @@ def BMS_d1_d2(spec: OptionSpec, spot: float) -> tuple[float, float]:
     return float(d1), float(d2)
 
 def BMS_at_spot(spec: OptionSpec, spot :float) -> tuple[float, float]:
-
+    """
+    Calculates BMS price fo a given spot
+    :param spec : option spec
+    :param spot : float, spot input
+    Returns
+    -------
+    Tuple[float, float]
+    call[0], put [1]
+    """
     d1, d2 = BMS_d1_d2(spec, spot)
 
     call_bms = (
@@ -491,7 +509,14 @@ def BMS_at_spot(spec: OptionSpec, spot :float) -> tuple[float, float]:
     return float(call_bms), float(put_bms)
 
 def BMS(spec: OptionSpec) -> tuple[float, float]:
-
+    """
+    BMS wrapper public interface.
+    :param spec : option spec
+    Returns
+    -------
+    Tuple[float, float]
+    call BMS_at_spot(spec)[0], put BMS_at_spot(spec)[1]
+    """
     if spec.exercise_style != "European":
         raise ValueError(
             "BMS is inaccurate for American options."
@@ -503,6 +528,15 @@ def BMS(spec: OptionSpec) -> tuple[float, float]:
     )
 
 def BAW_quadratic(spec: OptionSpec) -> tuple[float, float]:
+    """
+
+    BAW parameters setter
+    :param spec : option spec
+    Returns
+    -------
+    Tuple[float, float]
+    Q1, Q2 from the Euler-Cauchy EDP
+    """
     if spec.exercise_style != "American":
         raise ValueError("BAW is intended for American options only.")
 
@@ -541,6 +575,16 @@ def BAW_quadratic(spec: OptionSpec) -> tuple[float, float]:
     return Q1, Q2
 
 def BAW_call_boundary(critical_spot :float, spec: OptionSpec, Q2: float) -> float:
+    """
+    :param spec : option spec
+    :param critical_spot: from BAW_call_critical_spot(spec, Q2)
+    :param Q2: from BAW_quadratic(spec)
+
+    Returns
+    -------
+    float
+    f(S_star) << epsilon
+    """
     d1, _ = BMS_d1_d2(spec, critical_spot)
     call_bms, _ = BMS_at_spot(spec, critical_spot)
     assert critical_spot > 0.0
@@ -550,17 +594,45 @@ def BAW_call_boundary(critical_spot :float, spec: OptionSpec, Q2: float) -> floa
                 * (1.0 - np.exp(-spec.dividend_yield * spec.maturity) * norm.cdf(d1)))
 
 def BAW_call_critical_spot(spec: OptionSpec,Q2: float,) -> float:
+    """
+      :param spec : option spec
+      :param Q2: from BAW_quadratic(spec)
+
+      Returns
+      -------
+      float
+      f(S_star) << epsilon
+    """
+
+    r = spec.rate
+    q = spec.dividend_yield
+    sigma = spec.volatility
+
+    b = r - q
+
+    M = 2.0 * r / sigma ** 2
+    N = 2.0 * b / sigma ** 2
+
+    # Seed
+    QPerp = 0.5 * ((-1.0) * (N - 1.0) + np.sqrt((N - 1.0) ** 2 + 4.0 * M))
+    S_star_steady = spec.strike / (1.0 - 1.0 / QPerp)
 
     lower_bound = spec.strike
-    upper_bound = 2 * spec.strike
+    upper_bound = S_star_steady
+
     f_lower = BAW_call_boundary(lower_bound, spec, Q2)
     f_upper = BAW_call_boundary(upper_bound, spec, Q2)
     security = upper_bound
     security *=50
 
-    while f_lower * f_upper < 0.0 and upper_bound < security:
+    while f_lower * f_upper > 0.0 and upper_bound < security:
         upper_bound *= 2.0
         f_upper = BAW_call_boundary(upper_bound, spec, Q2)
+
+    if f_lower * f_upper > 0.0:
+        raise RuntimeError(
+            "Unable to bracket the BAW call critical spot."
+        )
 
     critical_spot = brentq(
         lambda s: BAW_call_boundary(
@@ -575,22 +647,124 @@ def BAW_call_critical_spot(spec: OptionSpec,Q2: float,) -> float:
     return float(critical_spot)
 
 def BAW_call(spec: OptionSpec, spot :float) -> float:
-  if spec.dividend_yield <= 0.0:
-      return BMS_at_spot(spec, spot)[0]
+    """
+    :param spec : option spec
+    :param spot : float, input spot
 
-  _ , Q2 = BAW_quadratic(spec)
-  S_star = BAW_call_critical_spot(spec, Q2)
-  c_bms = BMS_at_spot(spec, spot)[0]
-  d1_at_S_star = BMS_d1_d2(spec, S_star)[0]
+    Returns
+    -------
+    float
+    BAW call price
+    """
+    if spec.dividend_yield <= 0.0:
+        return BMS_at_spot(spec, spot)[0]
 
-  print(Q2)
-  print(S_star)
-  print(c_bms)
-  print(d1_at_S_star)
+    _ , Q2 = BAW_quadratic(spec)
+    S_star = BAW_call_critical_spot(spec, Q2)
+    c_bms = BMS_at_spot(spec, spot)[0]
+    d1_at_S_star = BMS_d1_d2(spec, S_star)[0]
 
-  A2 = (S_star / Q2) * (1.0 - np.exp(-spec.dividend_yield * spec.maturity) * norm.cdf(d1_at_S_star))
+    A2 = (S_star / Q2) * (1.0 - np.exp(-spec.dividend_yield * spec.maturity) * norm.cdf(d1_at_S_star))
 
-  if spot < S_star:
-      return c_bms + A2 * (spec.spot/S_star) ** Q2
-  else:
-      return spot - spec.strike
+    if spot < S_star:
+        return c_bms + A2 * (spot/S_star) ** Q2
+    else:
+        return spot - spec.strike
+
+def BAW_put_boundary(critical_spot: float, spec: OptionSpec, Q1: float) -> float:
+    """
+    :param spec : option spec
+    :param critical_spot: from BAW_put_critical_spot(spec, Q2)
+    :param Q1: from BAW_quadratic(spec)
+
+    Returns
+    -------
+    float
+    f(S_star) << epsilon
+    """
+    d1, _ = BMS_d1_d2(spec, critical_spot)
+    _, put_bms = BMS_at_spot(spec, critical_spot)
+    assert critical_spot >= 0.0
+    assert Q1 < 0.0
+
+    return (spec.strike - critical_spot - put_bms + critical_spot / Q1
+            * (1.0 - np.exp(-spec.dividend_yield * spec.maturity) * norm.cdf(-d1)))
+
+def BAW_put_critical_spot(spec: OptionSpec,Q1: float,) -> float:
+    """
+      :param spec : option spec
+      :param Q1: from BAW_quadratic(spec)
+
+      Returns
+      -------
+      float
+      f(S_star) << epsilon
+    """
+
+    r = spec.rate
+    q = spec.dividend_yield
+    sigma = spec.volatility
+
+    b = r - q
+
+    M = 2.0 * r / sigma ** 2
+    N = 2.0 * b / sigma ** 2
+
+    # Seed
+    QPerp = 0.5 * ((-1.0) * (N - 1.0) - np.sqrt((N - 1.0) ** 2 + 4.0 * M))
+    S_star_steady = spec.strike / (1.0 - 1.0 / QPerp)
+
+    assert 0.0 < S_star_steady < spec.strike
+
+    lower_bound = S_star_steady
+    upper_bound = spec.strike
+
+    f_lower = BAW_put_boundary(lower_bound, spec, Q1)
+    f_upper = BAW_put_boundary(upper_bound, spec, Q1)
+
+    if f_lower * f_upper > 0.0:
+        raise RuntimeError(
+            "Unable to bracket the BAW put critical spot. "
+            f"f(lower)={f_lower}, "
+            f"f(upper)={f_upper}, "
+            f"lower={lower_bound}, "
+            f"upper={upper_bound}"
+        )
+
+    critical_spot = brentq(
+        lambda s: BAW_put_boundary(
+            s,
+            spec,
+            Q1,
+        ),
+        lower_bound,
+        upper_bound,
+    )
+
+    assert 0.0 < critical_spot < spec.strike
+
+    return float(critical_spot)
+
+def BAW_put(spec: OptionSpec, spot :float) -> float:
+    """
+    :param spec : option spec
+    :param spot : float, input spot
+
+    Returns
+    -------
+    float
+    BAW put price
+    """
+
+    Q1, _ = BAW_quadratic(spec)
+    S_star = BAW_put_critical_spot(spec, Q1)
+    p_bms = BMS_at_spot(spec, spot)[1]
+    negative_d1_at_S_star = - BMS_d1_d2(spec, S_star)[0]
+
+    A1 = -(S_star / Q1) * (1.0 - np.exp(-spec.dividend_yield * spec.maturity) * norm.cdf(negative_d1_at_S_star))
+    assert A1 > 0.0
+
+    if spot > S_star:
+        return p_bms + A1 * (spot/S_star) ** Q1
+    else:
+        return spec.strike - spot

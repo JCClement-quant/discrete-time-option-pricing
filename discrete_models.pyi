@@ -64,6 +64,13 @@ def LR_cpp_price(
     config: TreeConfig,
 ) -> float: ...
 
+def LR_root(
+    option: VanillaOption,
+    market: MarketData,
+    config: TreeConfig,
+) -> float: ...
+
+
 StepsGrid = Sequence[int] | npt.NDArray[np.integer[Any]]
 
 class ConvergenceResults:

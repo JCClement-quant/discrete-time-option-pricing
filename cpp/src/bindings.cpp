@@ -91,6 +91,10 @@ PYBIND11_MODULE(discrete_models, module) {
     module.def("LR_cpp_price", &LR_price, py::arg("option"), py::arg("market"),
         py::arg("treeconfig"));
 
+    // LR root
+    module.def("LR_root", &LR_root_exercise_gap, py::arg("option"), py::arg("market"),
+        py::arg("treeconfig"));
+
     // Linkage of the ConvergenceResults structure
     py::class_<ConvergenceResults>(module, "ConvergenceResults")
         .def(py::init<>()) //Empty ConvergenceResults created !! No enough for an aggregated structure

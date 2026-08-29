@@ -1,6 +1,7 @@
 #pragma once
 #include<memory>
 
+
 namespace discrete_models {
     enum class ExerciseStyle {
         European,
@@ -119,6 +120,12 @@ namespace discrete_models {
         double p;
     };
 
+    struct BinomialResult {
+        double price;
+        double root_continuation;
+        double root_intrinsic;
+    };
+
     [[nodiscard]]
     double CRR_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config);
 
@@ -130,6 +137,9 @@ namespace discrete_models {
 
     [[nodiscard]]
     double LR_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config);
+
+    [[nodiscard]]
+    double LR_root_exercise_gap(const VanillaOption& option, const MarketData& market, const TreeConfig& config);
 
     [[nodiscard]]
     double binomial_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config,

@@ -1,1 +1,32 @@
 14.08.2026 As per Cpp__14082026__JR_Call_US__early_exercise : un schéma convergent vers une mesure risque-neutre n’est pas nécessairement exactement martingale à chaque discrétisation finie.
+23.08.2026 As per example_baw : l'erreur de princing bAW n'est pas pilotée principalement par l'erreur de frontière.
+            |  (q) | (S^*_{LR}(10001)) | extrapolation (N\to\infty) | (S^*_{BAW}) | BAW − LR extrapolé |
+            | ---: | ----------------: | -------------------------: | ----------: | -----------------: |
+            | 0.05 |           141.407 |                **141.538** |     140.117 |          **−1.42** |
+            | 0.10 |           121.953 |                **122.065** |     121.126 |          **−0.94** |
+            | 0.35 |           106.416 |                **106.513** |     106.056 |          **−0.46** |
+            | 0.48 |           104.519 |                **104.614** |     104.312 |          **−0.30** |
+            | 0.50 |           104.318 |                **104.413** |     104.134 |          **−0.28** |
+            | 0.60 |           103.524 |                **103.618** |     103.436 |          **−0.18** |
+    Ajustements sur N = 1001, 3001, 5001, 10001 pour le moteur LR C++.
+24.08.2026 Après extrapolation, BAW sous estime systématiquement la frontère ; le modèle appelle à exercer trop tôt.
+            |  (q) | (S^*_{LR,\infty}) | (S^*_{BAW}) | biais BAW | R^2        |
+            | ---: | ----------------: | ----------: | --------: | --------:  |
+            | 0.05 |           141.538 |     140.117 |    −1.421 | 0.99999953 |
+            | 0.10 |           122.065 |     121.126 |    −0.939 | 0.99999130 |
+            | 0.35 |           106.513 |     106.056 |    −0.457 | 0.99996460 |
+            | 0.48 |           104.614 |     104.312 |    −0.302 | 0.99994945 |
+            | 0.50 |           104.413 |     104.134 |    −0.279 | 0.99994688 |
+            | 0.60 |           103.618 |     103.436 |    −0.182 | 0.99993292 |
+    Mais parallèlement, l’erreur de prix change de signe puis devient fortement négative. C’est la preuve la plus
+    claire jusqu’ici que l’erreur de prix n’est pas une simple conséquence de l’erreur de frontière.
+    Le troisième enseignement est purement numérique : 1001 pas est très bon pour le prix, mais insuffisant comme
+    référence de frontière. Avec q = 0.6, on a 0.30 CHF de différence alors que le prix extrapolé est stabilisé.
+    CONVENTION :
+        Pricing benchmark:
+            LR N = 1001 ou 10001 selon précision recherchée
+
+        Free-boundary benchmark:
+            LR N = {1001, 3001, 5001, 10001}
+                + extrapolation linéaire en 1/sqrt(N)
+25.08.2026 q-->0+ alors S* --> +infini et q-->+infini alors S* -->K+

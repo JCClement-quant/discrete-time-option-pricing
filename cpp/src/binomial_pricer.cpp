@@ -9,6 +9,68 @@
 #include <vector>
 #include <ranges>
 
+
+namespace{
+    discrete_models::TreeParameters LR_Parameters(const discrete_models::VanillaOption& option,
+        const discrete_models::MarketData& market,const discrete_models::TreeConfig& treeconfig) {
+        if (market.spot <= 0.0) {
+            throw std::invalid_argument(
+                "Spot must be strictly positive."
+            );
+        }
+
+        if (option.maturity() <= 0.0) {
+            throw std::invalid_argument(
+                "Maturity must be strictly positive."
+            );
+        }
+
+        if (market.volatility <= 0.0) {
+            throw std::invalid_argument(
+                "Volatility must be strictly positive."
+            );
+        }
+
+        if (treeconfig.steps <= 0) {
+            throw std::invalid_argument(
+                "The number of steps must be strictly positive."
+            );
+        }
+        if (treeconfig.steps % 2 == 0) {
+            throw std::invalid_argument(
+                "Leiser-Reimer requires an odd number of steps."
+            );
+        }
+
+        auto sigma_sqrt_T = market.volatility * std::sqrt(option.maturity());
+        auto d1 = (std::log(market.spot / option.strike()) + (market.rate - market.dividend_yield + 0.5 *
+            market.volatility * market.volatility ) * option.maturity()) / sigma_sqrt_T;
+        auto d2 = d1 - sigma_sqrt_T;
+
+        auto p_prime = peizer_pratt_inversion(d1,treeconfig.steps);
+        auto p = peizer_pratt_inversion(d2, treeconfig.steps);
+
+        const long steps = treeconfig.steps;
+        const double dt = option.maturity()/static_cast<double>(steps);
+        const double carry_rate = market.rate - market.dividend_yield;
+        const double a = std::exp(carry_rate * dt);
+        const double u = a * p_prime / p;
+        const double d = (a - p * u) / (1 - p);
+
+        const discrete_models::TreeParameters treeparams{
+            .u = u,
+            .d = d,
+            .p = p
+        };
+
+        if (p <= 0.0 || p >= 1.0) {
+            throw std::invalid_argument(
+                "LR risk-neutral probability is outside ]0, 1[.");
+        }
+        return treeparams;
+    }
+}
+
 namespace discrete_models {
     PayoffCall::PayoffCall(double strike) : strike_(strike) {}
 
@@ -212,71 +274,24 @@ namespace discrete_models {
     }
 
     double LR_price(const VanillaOption &option, const MarketData &market, const TreeConfig &treeconfig) {
-        if (market.spot <= 0.0) {
-            throw std::invalid_argument(
-                "Spot must be strictly positive."
-            );
-        }
+        const TreeParameters treeparams = LR_Parameters(option, market, treeconfig);
 
-        if (option.maturity() <= 0.0) {
-            throw std::invalid_argument(
-                "Maturity must be strictly positive."
-            );
-        }
-
-        if (market.volatility <= 0.0) {
-            throw std::invalid_argument(
-                "Volatility must be strictly positive."
-            );
-        }
-
-        if (treeconfig.steps <= 0) {
-            throw std::invalid_argument(
-                "The number of steps must be strictly positive."
-            );
-        }
-        if (treeconfig.steps % 2 == 0) {
-            throw std::invalid_argument(
-                "Leiser-Reimer requires an odd number of steps."
-            );
-        }
-
-        auto sigma_sqrt_T = market.volatility * std::sqrt(option.maturity());
-        auto d1 = (std::log(market.spot / option.strike()) + (market.rate - market.dividend_yield + 0.5 *
-            market.volatility * market.volatility ) * option.maturity()) / sigma_sqrt_T;
-        auto d2 = d1 - sigma_sqrt_T;
-
-        auto p_prime = peizer_pratt_inversion(d1,treeconfig.steps);
-        auto p = peizer_pratt_inversion(d2, treeconfig.steps);
-
-        const long steps = treeconfig.steps;
-        const double dt = option.maturity()/static_cast<double>(steps);
-        const double carry_rate = market.rate - market.dividend_yield;
-        const double a = std::exp(carry_rate * dt);
-        const double u = a * p_prime / p;
-        const double d = (a - p * u) / (1 - p);
-
-        const TreeParameters treeparams{
-            .u = u,
-            .d = d,
-            .p = p
-        };
-
-        if (p <= 0.0 || p >= 1.0) {
+        if (treeparams.p <= 0.0 || treeparams.p >= 1.0) {
             throw std::invalid_argument(
                 "LR risk-neutral probability is outside ]0, 1[.");
         }
 
-        return binomial_price(option,market,treeconfig, treeparams);
+        return binomial_price(option,market,treeconfig,treeparams);
 
     }
 
-    double binomial_price(const VanillaOption &option, const MarketData &market, const TreeConfig &treeconfig,
+    BinomialResult binomial_evaluate(const VanillaOption &option, const MarketData &market, const TreeConfig &treeconfig,
         const TreeParameters &treeparams) {
         if (treeparams.p <= 0.0 || treeparams.p >= 1.0) {
             throw std::invalid_argument(
                 "Risk-neutral probability is outside ]0, 1[.");
         }
+        BinomialResult result;
 
         const long steps = treeconfig.steps;
         const double dt = option.maturity()/static_cast<double>(steps);
@@ -325,29 +340,38 @@ namespace discrete_models {
                 std::views::take(i+1))) {
                 const double continuation_value =
                     discount * (treeparams.p * option_values[static_cast<std::size_t>(j) +1 ] +q * value);
+                const double intrinsic = option.payoff(current_spot);
                 if (is_american) {
 
-                    value = std::max(continuation_value,option.payoff(current_spot));
-                    //current_spot = base_spot * std::pow(u_over_d, j);
-
-                    const double intrisic = option.payoff(current_spot);
-                    /*
-                    if (intrisic > continuation_value) {
-                        early_exercise_count++;
-                    }
-                    */
+                    value = std::max(continuation_value,intrinsic);
                     current_spot *= u_over_d;
                 } else {
                     value = continuation_value;
                 }
+                if (i == 0) {
+                    result.root_intrinsic = intrinsic;
+                    result.root_continuation = continuation_value;
                 }
-            base_spot /= treeparams.d;
+            }
         }
-        /*
-        if (is_american){
-        std::cout << "Early exercise count: " << early_exercise_count << std::endl;
-        }
-        */
-        return option_values.front();
+        result.price = option_values.front();
+        return result;
+    }
+
+    double LR_root_exercise_gap(const VanillaOption& option, const MarketData& market, const TreeConfig& treeconfig) {
+        const TreeParameters treeparams = LR_Parameters(option, market, treeconfig);
+        const auto result = binomial_evaluate(option,market,treeconfig, treeparams);
+        return (result.root_continuation - result.root_intrinsic);
+    }
+
+    double binomial_price(const VanillaOption &option, const MarketData &market, const TreeConfig &treeconfig,
+    const TreeParameters &treeparams) {
+        return binomial_evaluate(
+            option,
+            market,
+            treeconfig,
+            treeparams
+        ).price;
     }
 }
+
