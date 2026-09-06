@@ -60,7 +60,7 @@
             zone intermédiaire puis décroissant ;
         frontière relative : après le croisement, BAW devient progressivement plus basse que LR en proportion, jusqu’à
             environ -20% à q=1.
-    >> le défaut BAW est dans la représentation de la continuation premium, pas simplement dans le calcul de
+    >> le défaut de BAW est dans la représentation de la continuation premium, pas simplement dans le calcul de
         la free boundary. On obtient une frontière BAW presque 20 % trop basse relativement, tout en conservant un prix
         extrêmement proche de LR. <<
     Autour de q=0.07, le biais de frontière change de signe ; l'erreur de pricing Put BAW-LR avait sont maximut positif
