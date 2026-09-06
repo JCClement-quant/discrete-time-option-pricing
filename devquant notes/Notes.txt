@@ -1,5 +1,6 @@
-14.08.2026 As per Cpp__14082026__JR_Call_US__early_exercise : un schéma convergent vers une mesure risque-neutre n’est pas nécessairement exactement martingale à chaque discrétisation finie.
-23.08.2026 As per example_baw : l'erreur de princing bAW n'est pas pilotée principalement par l'erreur de frontière.
+14.08.2026 As per Cpp__14082026__JR_Call_US__early_exercise : un schéma convergent vers une mesure risque-neutre n’est
+ pas nécessairement exactement martingale à chaque discrétisation finie.
+23.08.2026 As per example_baw : l'erreur de princing BAW n'est pas pilotée principalement par l'erreur de frontière.
             |  (q) | (S^*_{LR}(10001)) | extrapolation (N\to\infty) | (S^*_{BAW}) | BAW − LR extrapolé |
             | ---: | ----------------: | -------------------------: | ----------: | -----------------: |
             | 0.05 |           141.407 |                **141.538** |     140.117 |          **−1.42** |
@@ -30,3 +31,54 @@
             LR N = {1001, 3001, 5001, 10001}
                 + extrapolation linéaire en 1/sqrt(N)
 25.08.2026 q-->0+ alors S* --> +infini et q-->+infini alors S* -->K+
+29.08.2026  Pour le Call, BAW pouvait sur- puis sous-pricer, avec un gros hump négatif, alors que l'erreur de frontière
+    restait beaucoup plus régulière.
+    Pour le Put, sur cette coupe, BAW surprice partout, avec une erreur en forme de double régime, tandis que la
+    frontière BAW reste généralement sous celle de LR.
+    >> le défaut BAW est dans la représentation de la continuation premium, pas simplement dans le calcul de la free
+       boundary. <<
+ 06.09.2026 On a donc pour le Put :
+            |   (q) | (S^*_{BAW}) | (S^*_{LR,\infty}) | biais BAW | R^2        |
+            | ----: | ----------: | ----------------: | --------: | ---------: |
+            | 0.050 |   71.368855 |         70.652366 | +0.716490 | 0.99999994 |
+            | 0.100 |   43.507941 |         44.682691 | -1.174750 | 0.99932653 |
+            | 0.200 |   21.604644 |         22.891442 | -1.286797 | 0.99610253 |
+            | 0.350 |   12.094380 |         13.437729 | -1.343349 | 0.99365389 |
+            | 0.450 |   9.264234  |         10.580169 | -1.315935 | 0.99309339 |
+            | 0.500 |   8.276338  |          9.567765 | -1.291427 | 0.99334562 |
+            | 0.600 |   6.802191  |          8.032500 | -1.230309 | 0.99373473 |
+            | 0.700 |   5.759354  |          6.921987 | -1.162634 | 0.99414189 |
+            | 0.750 |   5.345851  |          6.474309 | -1.128458 | 0.99425519 |
+            | 0.800 |   4.986247  |          6.080973 | -1.094725 | 0.99444459 |
+            | 0.900 |   4.392513  |          5.421965 | -1.029452 | 0.99473313 |
+            | 1.000 |   3.923738  |          4.891642 | -0.967904 | 0.99471110 |
+    Les deux frontières descendent vers zéro lorsque q augmente, mais BAW descend plus vite que la frontière LR.
+    Voilà pourquoi l’erreur absolue se réduit alors que l’erreur relative augmente.
+        prix : BAW surprice LR sur toute la coupe en q étudiée ;
+        prime d’exercice anticipé : BAW la surestime également ;
+        frontière absolue : BAW passe d’un léger biais positif à un biais négatif, maximal en valeur absolue dans la
+            zone intermédiaire puis décroissant ;
+        frontière relative : après le croisement, BAW devient progressivement plus basse que LR en proportion, jusqu’à
+            environ -20% à q=1.
+    >> le défaut BAW est dans la représentation de la continuation premium, pas simplement dans le calcul de
+        la free boundary. On obtient une frontière BAW presque 20 % trop basse relativement, tout en conservant un prix
+        extrêmement proche de LR. <<
+    Autour de q=0.07, le biais de frontière change de signe ; l'erreur de pricing Put BAW-LR avait sont maximut positif
+    vers q=0.06.
+                 q        BAW         LR         dV      S*_BAW    S*_LRinf        dS*      dS* %
+             0.050   7.692110   7.662612  +0.029498   71.368855   70.652366  +0.716490    +1.014%
+             0.052   7.768593   7.737274  +0.031318   70.621400   69.969169  +0.652231    +0.932%
+             0.054   7.846309   7.813254  +0.033055   69.821509   69.246920  +0.574589    +0.830%
+             0.056   7.925288   7.890749  +0.034539   68.963857   68.481875  +0.481982    +0.704%
+             0.058   8.005556   7.969988  +0.035569   68.043081   67.669758  +0.373323    +0.552%
+             0.060   8.087134   8.051174  +0.035960   67.054244   66.806010  +0.248234    +0.372%
+             0.062   8.170035   8.134433  +0.035603   65.993581   65.886123  +0.107458    +0.163%
+             0.064   8.254264   8.219770  +0.034494   64.859556   64.906175  -0.046620    -0.072%
+             0.066   8.339812   8.307069  +0.032743   63.654151   63.863656  -0.209504    -0.328%
+             0.068   8.426658   8.396122  +0.030536   62.384076   62.758678  -0.374603    -0.597%
+             0.070   8.514762   8.486680  +0.028083   61.061330   61.595175  -0.533845    -0.867%
+    Le maximum de surpricing BAW se produit juste avant le croisement des frontières. On ne peut pour l'heure conclure
+    que « le maximum de prix est causé par le croisement de frontière » mais la signature numérique est notable.
+    Au voisinage de cette zone, l'erreur de frontière évolue presque monotoniquement quand l'erreur de pricing à un
+    comportement de hump.
+    >> Pricing error et boundary error sont liés, mais pas mécaniquement proportionnels. <<

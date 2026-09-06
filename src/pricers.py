@@ -684,7 +684,7 @@ def BAW_put_boundary(critical_spot: float, spec: OptionSpec, Q1: float) -> float
     """
     d1, _ = BMS_d1_d2(spec, critical_spot)
     _, put_bms = BMS_at_spot(spec, critical_spot)
-    assert critical_spot >= 0.0
+    assert critical_spot > 0.0
     assert Q1 < 0.0
 
     return (spec.strike - critical_spot - put_bms + critical_spot / Q1
@@ -721,6 +721,15 @@ def BAW_put_critical_spot(spec: OptionSpec,Q1: float,) -> float:
 
     f_lower = BAW_put_boundary(lower_bound, spec, Q1)
     f_upper = BAW_put_boundary(upper_bound, spec, Q1)
+
+    floor = spec.strike * 1e-10
+
+    while f_lower * f_upper > 0.0 and lower_bound > floor:
+        lower_bound *= 0.5
+
+        f_lower = BAW_put_boundary(
+            lower_bound, spec, Q1
+        )
 
     if f_lower * f_upper > 0.0:
         raise RuntimeError(

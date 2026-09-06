@@ -289,7 +289,6 @@ The tests cover:
 
 ## Planned extensions
 
-- BAW for American exercise
 - Tian 1999 binomial model
 - trinomial trees
 - analytical and numerical Greeks
@@ -338,7 +337,7 @@ The tests cover:
 - Mark S. Joshi,  
   *The Concepts and Practice of Mathematical Finance*
 
-- Pascal François,
+- Pascal François,  
   *Les produits dérivés financiers*
 
 ## Status
@@ -356,4 +355,5 @@ The project currently supports:
 - Black–Scholes–Merton convergence testing;
 - interactive Streamlit pricing;
 - high-performance C++ pricing;
-- cross-language numerical validation.
+- cross-language numerical validation
+- BAW for US Calls and Put and LR benchmark.
