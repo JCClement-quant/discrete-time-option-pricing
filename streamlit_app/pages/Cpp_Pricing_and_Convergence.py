@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import streamlit as st
 
-from src.pricers import OptionSpec, BMS, BAW_call
+from src.pricers import OptionSpec, BMS, BAW_call, BAW_put, JZ_Pricer
 from linker_cpp import discrete_models
 from src.visuals import (plot_price_convergence, plot_absolute_error, plot_relative_error,
                          plot_signed_error, plot_convergence_performance, plot_crr_smoothing)
@@ -223,8 +223,14 @@ if exercise_style == "European":
     plt.close(fig_rel)
 
 else:
-    baw_price = BAW_call(spec, spot)
-    col1, col2, col3, col4, col5 = st.columns(5)
+    if option_type == "Call":
+        baw_price = BAW_call(spec, spot)
+        jz_price = JZ_Pricer(spec, spot, 1)
+    else:
+        baw_price = BAW_put(spec, spot)
+        jz_price = JZ_Pricer(spec, spot, -1)
+
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
 
     with col1:
         st.metric(
@@ -254,6 +260,12 @@ else:
         st.metric(
             "BAW",
             f"{baw_price:.8f}",
+        )
+
+    with col6:
+        st.metric(
+            "JZ",
+            f"{jz_price:.8f}",
         )
 
     steps_grid = [5, 11, 15, 25, 51, 101, 251, 1001, 2501, 5001, 10001]

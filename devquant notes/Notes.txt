@@ -63,7 +63,7 @@
     >> le défaut de BAW est dans la représentation de la continuation premium, pas simplement dans le calcul de
         la free boundary. On obtient une frontière BAW presque 20 % trop basse relativement, tout en conservant un prix
         extrêmement proche de LR. <<
-    Autour de q=0.07, le biais de frontière change de signe ; l'erreur de pricing Put BAW-LR avait sont maximut positif
+    Autour de q=0.07, le biais de frontière change de signe ; l'erreur de pricing Put BAW-LR avait sont maximum positif
     vers q=0.06.
                  q        BAW         LR         dV      S*_BAW    S*_LRinf        dS*      dS* %
              0.050   7.692110   7.662612  +0.029498   71.368855   70.652366  +0.716490    +1.014%
@@ -82,3 +82,17 @@
     Au voisinage de cette zone, l'erreur de frontière évolue presque monotoniquement quand l'erreur de pricing à un
     comportement de hump.
     >> Pricing error et boundary error sont liés, mais pas mécaniquement proportionnels. <<
+    On conclut avec une une première correction proposée par N. Ju et R. Zhong dans une article de 1999. JZ ne cherche
+    pas une correction de la frontière de S* ; ils conservent celle de BAW. La correction vient s'appliquer sur la prime
+    américaine, et l'écart avec LR se réduit significativement. Pour le call :
+            q=0.080 | LR=6.542078 | BAW=6.573533 | Dbaw_lr=0.031456  | Djz_lr=-0.021657 | Djz_baw=-0.05311 |
+            q=0.230 | LR=3.418896 | BAW=3.351237 | Dbaw_lr=-0.067659 | Djz_lr=0.026513  | Djz_baw=0.094172 |
+            q=0.350 | LR=2.305265 | BAW=2.181260 | Dbaw_lr=-0.124005 | Djz_lr=0.005738  | Djz_baw=0.129743 |
+            q=0.500 | LR=1.589079 | BAW=1.493965 | Dbaw_lr=-0.095115 | Djz_lr=-0.007670 | Djz_baw=0.087445 |
+            q=0.600 | LR=1.309428 | BAW=1.243544 | Dbaw_lr=-0.065884 | Djz_lr=-0.006456 | Djz_baw=0.059428 |
+    La correction est encore plus efficace sur le put :
+            q=0.080 | LR=8.955150  | BAW=8.972048  | Dbaw_lr=0.016898 | Djz_lr=0.003761 | Djz_baw=-0.013137 |
+            q=0.230 | LR=17.410451 | BAW=17.412432 | Dbaw_lr=0.001981 | Djz_lr=0.000134 | Djz_baw=-0.001847 |
+            q=0.350 | LR=25.132289 | BAW=25.136323 | Dbaw_lr=0.004034 | Djz_lr=0.000260 | Djz_baw=-0.003774 |
+            q=0.500 | LR=34.533946 | BAW=34.544787 | Dbaw_lr=0.010842 | Djz_lr=0.000809 | Djz_baw=-0.010033 |
+            q=0.600 | LR=40.254718 | BAW=40.273581 | Dbaw_lr=0.018863 | Djz_lr=0.001593 | Djz_baw=-0.017270 |

@@ -777,3 +777,132 @@ def BAW_put(spec: OptionSpec, spot :float) -> float:
         return p_bms + A1 * (spot/S_star) ** Q1
     else:
         return spec.strike - spot
+
+@dataclass
+class JZParams:
+    h: float
+    alpha: float
+    beta: float
+    the_lambda: float
+    the_lambda_prime: float
+    S_star: float
+    hA : float
+    b: float
+    c: float
+
+def JZ_parameters(spec: OptionSpec, phi: int) -> JZParams:
+
+    tau = spec.maturity
+    r = spec.rate
+    q = spec.dividend_yield
+    sigma = spec.volatility
+
+    h = 1.0 - math.exp(-r * tau)
+
+    alpha = 2.0 * r / sigma**2
+    beta = 2.0 * (r - q) / sigma**2
+
+    root = math.sqrt(
+        (beta - 1.0)**2
+        + 4.0 * alpha / h
+    )
+
+    lam = 0.5 * (
+        -(beta - 1.0)
+        + phi * root
+    )
+
+    lam_prime = (
+        -phi
+        * alpha
+        / (h**2 * root)
+    )
+
+    q1, q2 = BAW_quadratic(spec)
+
+    if phi == 1:
+        S_star = BAW_call_critical_spot(spec, q2)
+    else:
+        S_star = BAW_put_critical_spot(spec, q1)
+
+    call_eur, put_eur = BMS_at_spot(spec, S_star)
+    VE_star = call_eur if phi == 1 else put_eur
+
+    hA = phi * (S_star - spec.strike) - VE_star
+
+    d1_star, d2_star = BMS_d1_d2(spec, S_star)
+
+    denom = 2.0 * lam + beta - 1.0
+
+    b = (
+        (1.0 - h)
+        * alpha
+        * lam_prime
+        / (2.0 * denom)
+    )
+
+    DVe = (
+        S_star
+        * norm.pdf(d1_star)
+        * sigma
+        * math.exp((r - q) * tau)
+        / (2.0 * r * math.sqrt(tau))
+        -
+        phi
+        * q
+        * S_star
+        * norm.cdf(phi * d1_star)
+        * math.exp((r - q) * tau)
+        / r
+        +
+        phi
+        * spec.strike
+        * norm.cdf(phi * d2_star)
+    )
+
+    c = (
+        -(1.0 - h)
+        * alpha
+        / denom
+        * (
+            DVe / hA
+            + 1.0 / h
+            + lam_prime / denom
+        )
+    )
+
+    return JZParams(
+        h=h,
+        alpha=alpha,
+        beta=beta,
+        the_lambda=lam,
+        the_lambda_prime=lam_prime,
+        S_star=S_star,
+        hA=hA,
+        b=b,
+        c=c,
+    )
+
+def JZ_Pricer(spec: OptionSpec, spot:float, phi:int) -> float:
+    params = JZ_parameters(spec, phi)
+
+    if phi * (params.S_star - spot) <= 0:
+        return phi * (spot - spec.strike)
+
+    call_eur, put_eur = BMS_at_spot(spec, spot)
+    european_price = call_eur if phi == 1 else put_eur
+
+    log_ratio = math.log(spot / params.S_star)
+
+    chi = (
+        params.b * log_ratio**2
+        + params.c * log_ratio
+    )
+
+    premium = (
+        params.hA
+        * (spot / params.S_star) ** params.the_lambda
+        / (1.0 - chi)
+    )
+
+    return european_price + premium
