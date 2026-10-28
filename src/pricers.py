@@ -714,6 +714,10 @@ def BAW_put_critical_spot(spec: OptionSpec,Q1: float,) -> float:
     QPerp = 0.5 * ((-1.0) * (N - 1.0) - np.sqrt((N - 1.0) ** 2 + 4.0 * M))
     S_star_steady = spec.strike / (1.0 - 1.0 / QPerp)
 
+    # si r = 0 et Q>= 0 l'exercice du put n'est jamais optimal
+    if spec.rate == 0.0 and spec.dividend_yield >= 0.0:
+        _, put = BMS_at_spot(spec, spot)
+        return put
     assert 0.0 < S_star_steady < spec.strike
 
     lower_bound = S_star_steady
@@ -834,42 +838,64 @@ def JZ_parameters(spec: OptionSpec, phi: int) -> JZParams:
 
     denom = 2.0 * lam + beta - 1.0
 
-    b = (
-        (1.0 - h)
-        * alpha
-        * lam_prime
-        / (2.0 * denom)
-    )
-
-    DVe = (
-        S_star
-        * norm.pdf(d1_star)
-        * sigma
-        * math.exp((r - q) * tau)
-        / (2.0 * r * math.sqrt(tau))
-        -
-        phi
-        * q
-        * S_star
-        * norm.cdf(phi * d1_star)
-        * math.exp((r - q) * tau)
-        / r
-        +
-        phi
-        * spec.strike
-        * norm.cdf(phi * d2_star)
-    )
-
-    c = (
-        -(1.0 - h)
-        * alpha
-        / denom
-        * (
-            DVe / hA
-            + 1.0 / h
-            + lam_prime / denom
+    # If r = 0 for the US CALL we use JZ limit values
+    if phi == 1 and spec.rate == 0:
+        root = math.sqrt(
+            (beta - 1.0) ** 2
+            + 8.0 / (tau * sigma ** 2)
         )
-    )
+
+        lam = 0.5 * (
+                -(beta - 1.0)
+                + phi * root
+        )
+
+        b = -2 / (sigma ** 4 * tau ** 2 * ((beta - 1.0) ** 2 + 8.0 / (tau * sigma ** 2)))
+        c = ((- phi / root) *
+             (S_star * norm.pdf(phi * d1_star) * math.exp(-q * tau) / (hA * sigma * math.sqrt(tau)) -
+              phi * 2 * q * S_star * norm.cdf(phi * d1_star) * math.exp((r - q) * tau) / (hA * sigma ** 2) +
+              2 / (sigma ** 2 * tau) - 4 / (sigma ** 4 * tau ** 2 * ((beta - 1.0) ** 2 + 8.0 / (h * sigma ** 2)))))
+
+        lam_prime = math.nan  # not defined/needed in JZ r=0 limit
+    else:
+
+        b = (
+            (1.0 - h)
+            * alpha
+            * lam_prime
+            / (2.0 * denom)
+        )
+
+        DVe = (
+            S_star
+            * norm.pdf(d1_star)
+            * sigma
+            * math.exp((r - q) * tau)
+            / (2.0 * r * math.sqrt(tau))
+            -
+            phi
+            * q
+            * S_star
+            * norm.cdf(phi * d1_star)
+            * math.exp((r - q) * tau)
+            / r
+            +
+            phi
+            * spec.strike
+            * norm.cdf(phi * d2_star)
+        )
+
+        c = (
+            -(1.0 - h)
+            * alpha
+            / denom
+            * (
+                DVe / hA
+                + 1.0 / h
+                + lam_prime / denom
+            )
+        )
+
 
     return JZParams(
         h=h,
@@ -884,7 +910,18 @@ def JZ_parameters(spec: OptionSpec, phi: int) -> JZParams:
     )
 
 def JZ_Pricer(spec: OptionSpec, spot:float, phi:int) -> float:
+    # American call without dividends:
+    # no early exercise, hence no finite critical boundary.
+    if phi == 1 and spec.dividend_yield <= 0.0:
+        call_eur, _ = BMS_at_spot(spec, spot)
+        return call_eur
     params = JZ_parameters(spec, phi)
+
+    # American put with 0 RF:
+    # no early exercise, hence no finite critical boundary.
+    if phi == -1 and spec.rate == 0.0 and spec.dividend_yield >= 0.0:
+        _, put = BMS_at_spot(spec, spot)
+        return put
 
     if phi * (params.S_star - spot) <= 0:
         return phi * (spot - spec.strike)

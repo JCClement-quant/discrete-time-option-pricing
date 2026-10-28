@@ -34,7 +34,12 @@ def validate_option_inputs(
     if maturity <= 0.0:
         raise ValueError("maturity must be strictly positive")
 
-    if volatility < 0.0:
+    if rate < 0.0:
+        raise ValueError(
+            "Negative interest rates are not supported yet."
+        )
+
+    if volatility <= 0.0:
         raise ValueError("volatility must be non-negative")
 
     if not isinstance(steps, int) or steps <= 0:

@@ -54,6 +54,7 @@ with st.sidebar:
 
     rate = st.number_input(
         "Risk-free rate",
+        min_value=0.00,
         value=0.05,
         step=0.005,
         format="%.4f",
@@ -153,12 +154,15 @@ lr_price = discrete_models.LR_cpp_price(
     config,
 )
 
+benchmarks = {}
+
 t_graph = 0 #Diag global variable
 if exercise_style == "European":
     if option_type == "Call":
         bms_price = BMS(spec)[0]
     else: bms_price = BMS(spec)[1]
-
+    benchmarks["BMS"] = bms_price
+    benchmark = bms_price
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
@@ -200,16 +204,17 @@ if exercise_style == "European":
     t_graph = perf_counter()
     fig_price = plot_price_convergence(
         results,
-        benchmark=bms_price,
+        benchmarks=benchmarks,
     )
+
     fig_abs = plot_absolute_error(
         results,
-        benchmark=bms_price
+        benchmark,
     )
 
     fig_rel = plot_relative_error(
         results,
-        benchmark=bms_price
+        benchmark,
     )
 
     plot_build_time = perf_counter() - t_graph
@@ -226,9 +231,16 @@ else:
     if option_type == "Call":
         baw_price = BAW_call(spec, spot)
         jz_price = JZ_Pricer(spec, spot, 1)
+        benchmarks["BAW"] = baw_price
+        benchmarks["Ju-Zhong"] = jz_price
     else:
         baw_price = BAW_put(spec, spot)
         jz_price = JZ_Pricer(spec, spot, -1)
+        benchmarks["BAW"] = baw_price
+        benchmarks["Ju-Zhong"] = jz_price
+
+    if (option_type == "Call") and (spec.dividend_yield <= 0.00):
+        col1, col2, col3, col4,  = st.columns(4)
 
     col1, col2, col3, col4, col5, col6 = st.columns(6)
 
@@ -256,17 +268,18 @@ else:
             f"{lr_price:.8f}",
         )
 
-    with col5:
-        st.metric(
-            "BAW",
-            f"{baw_price:.8f}",
-        )
+    if not (option_type == "Call" and spec.dividend_yield == 0.00):
+        with col5:
+            st.metric(
+                "BAW",
+                f"{baw_price:.8f}",
+            )
 
-    with col6:
-        st.metric(
-            "JZ",
-            f"{jz_price:.8f}",
-        )
+        with col6:
+            st.metric(
+                "JZ",
+                f"{jz_price:.8f}",
+            )
 
     steps_grid = [5, 11, 15, 25, 51, 101, 251, 1001, 2501, 5001, 10001]
 
@@ -278,6 +291,7 @@ else:
     t_graph = perf_counter()
     fig_price = plot_price_convergence(
         results,
+        benchmarks=benchmarks,
     )
     plot_build_time = perf_counter() - t_graph
 
@@ -301,14 +315,12 @@ results_unthreaded = discrete_models.Binomial_Convergence_Unthreaded(
 unthreaded_time = perf_counter() - t0
 speedup = unthreaded_time / threaded_time
 
-
-
 with st.expander("Advanced diagnostics"):
 
     if exercise_style == "European":
         fig_signed = plot_signed_error(
             results,
-            benchmark=bms_price,
+            benchmark,
         )
 
         st.pyplot(fig_signed, width='content')
@@ -316,7 +328,7 @@ with st.expander("Advanced diagnostics"):
 
         fig_crr = plot_crr_smoothing(
             results,
-            benchmark=bms_price,
+            benchmark,
         )
 
         st.pyplot(fig_crr)

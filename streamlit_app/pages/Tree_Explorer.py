@@ -57,6 +57,7 @@ with st.sidebar:
 
     rate = st.number_input(
         "Risk-free rate",
+        min_value=0.00,
         value=0.05,
         step=0.005,
         format="%.4f",

@@ -10,3 +10,6 @@ pg = st.navigation([page_1, page_2])
 
 # Execution
 pg.run()
+
+# Call
+# .\.venv\Scripts\python.exe -m streamlit run streamlit_app\app_main.py

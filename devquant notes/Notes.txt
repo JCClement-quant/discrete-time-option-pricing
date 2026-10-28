@@ -82,7 +82,7 @@
     Au voisinage de cette zone, l'erreur de frontière évolue presque monotoniquement quand l'erreur de pricing à un
     comportement de hump.
     >> Pricing error et boundary error sont liés, mais pas mécaniquement proportionnels. <<
-    On conclut avec une une première correction proposée par N. Ju et R. Zhong dans une article de 1999. JZ ne cherche
+ 27.10.2026 On conclut avec une une première correction proposée par N. Ju et R. Zhong dans une article de 1999. JZ ne cherche
     pas une correction de la frontière de S* ; ils conservent celle de BAW. La correction vient s'appliquer sur la prime
     américaine, et l'écart avec LR se réduit significativement. Pour le call :
             q=0.080 | LR=6.542078 | BAW=6.573533 | Dbaw_lr=0.031456  | Djz_lr=-0.021657 | Djz_baw=-0.05311 |
@@ -96,3 +96,35 @@
             q=0.350 | LR=25.132289 | BAW=25.136323 | Dbaw_lr=0.004034 | Djz_lr=0.000260 | Djz_baw=-0.003774 |
             q=0.500 | LR=34.533946 | BAW=34.544787 | Dbaw_lr=0.010842 | Djz_lr=0.000809 | Djz_baw=-0.010033 |
             q=0.600 | LR=40.254718 | BAW=40.273581 | Dbaw_lr=0.018863 | Djz_lr=0.001593 | Djz_baw=-0.017270 |
+    Ju–Zhong (JZ) implémenté et comparé à BAW et Leisen–Reimer (LR).
+    JZ conserve la même frontière critique (S^*) que BAW ; la correction porte uniquement sur la continuation /
+    early-exercise premium.
+    Benchmark : LR, sweeps denses à (N=1001), contrôles ponctuels à (N=10001).
+    Call américain
+    BAW présente un biais structuré : légère surévaluation à faible (q), puis forte sous-évaluation,
+    minimum (\approx-0.12) vers (q\approx0.35).
+    JZ corrige très fortement ce hump : erreur JZ–LR généralement limitée à quelques centimes.
+    (JZ-BAW) a presque la forme opposée à l’erreur BAW–LR, confirmant que la correction de continuation premium fait
+    l’essentiel du travail.
+    Pour (q=0), Call US neutralisé : (C_A=C_E).
+    Put américain — sweep en (q)
+    BAW surévalue légèrement LR, avec un maximum d’erreur (\approx+0.035) vers (q\approx0.06).
+    JZ réduit fortement cette erreur ; pour (q) intermédiaire/élevé, JZ–LR tombe souvent à (10^{-4})–(10^{-3}).
+    À très faible (q), JZ peut surcorriger et devenir moins précis ponctuellement.
+    Put américain — (q=0), sweep en (r), (N=10001)
+    JZ n’est pas uniformément meilleur :
+        meilleur à (r=0.01,\ 0.08,\ 0.10) ;
+        BAW meilleur à (r=0.02,\ 0.03,\ 0.05).
+    Sur les six points : (RMSE_{BAW}\approx0.0119), (RMSE_{JZ}\approx0.0151).
+    La correction (JZ-BAW) est surtout négative et peut donc aggraver BAW lorsque BAW est déjà sous LR.
+    Conclusion
+    JZ améliore très nettement BAW dans de nombreux régimes, surtout là où l’erreur BAW devient structurellement
+    importante,
+    mais ne domine pas BAW point par point. L’amélioration vient de la correction de la continuation premium,
+    pas de la frontière d’exercice.
+        r=0.010 | LR=7.513448 | BAW=7.501750 | Dbaw_lr=-0.011698 | Djz_lr=-0.009955 | Djz_baw=0.001743  |
+        r=0.020 | LR=7.110819 | BAW=7.099864 | Dbaw_lr=-0.010955 | Djz_lr=-0.017266 | Djz_baw=-0.006311 |
+        r=0.030 | LR=6.742989 | BAW=6.737352 | Dbaw_lr=-0.005637 | Djz_lr=-0.020905 | Djz_baw=-0.015268 |
+        r=0.050 | LR=6.090344 | BAW=6.097615 | Dbaw_lr=0.007271  | Djz_lr=-0.020596 | Djz_baw=-0.027867 |
+        r=0.080 | LR=5.274283 | BAW=5.291337 | Dbaw_lr=0.017054  | Djz_lr=-0.010000 | Djz_baw=-0.027055 |
+        r=0.100 | LR=4.816202 | BAW=4.830794 | Dbaw_lr=0.014592  | Djz_lr=-0.000744 | Djz_baw=-0.015337 |

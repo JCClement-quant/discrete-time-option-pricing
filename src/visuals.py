@@ -191,7 +191,7 @@ def render_binomial_tree(
     decimals: int = 4,
     title: Optional[str] = None,
     show_arrows: bool = True,
-    figsize: Optional[tuple[float, float]] = None,
+    figsize: tuple[float, float] | None = None,
     fontsize: int = 8,
     node_width: Optional[float] = None,
     node_height: Optional[float] = None,
@@ -363,7 +363,7 @@ def _format_log_steps_axis(ax) -> None:
 
 def plot_price_convergence(
     results: "ConvergenceResults",
-    benchmark: float | None = None,
+    benchmarks: dict[str, float] | None = None,
 ) -> Figure:
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
@@ -396,12 +396,24 @@ def plot_price_convergence(
         label="Leisen-Reimer",
     )
 
-    if benchmark is not None:
-        ax.axhline(
-            benchmark,
-            linestyle="--",
-            label="Black-Scholes",
-        )
+    benchmark_styles = {
+        "BAW": {"linestyle": "--", "linewidth": 1.6},
+        "Ju-Zhong": {"linestyle": ":", "linewidth": 2.0},
+        "BMS": {"linestyle": "-.", "linewidth": 1.5},
+    }
+
+    if benchmarks:
+        for label, value in benchmarks.items():
+            style = benchmark_styles.get(
+                label,
+                {"linestyle": "--", "linewidth": 1.5},
+            )
+
+            ax.axhline(
+                y=value,
+                label=label,
+                **style,
+            )
 
     ax.set_xlabel("Number of steps")
     ax.set_ylabel("Option price")
