@@ -1,4 +1,4 @@
-from src.pricers import OptionSpec, crr_price, jr_price, tian93_price, build_binomial_tree
+from src.pricers import OptionSpec, crr_price, jr_price, tian93_price, build_binomial_tree, lr_price, tian99_price
 import pytest
 
 def test_option_spec_creation():
@@ -398,7 +398,7 @@ def test_binomial_models_are_consistent():
         maturity=1.0,
         rate=0.05,
         volatility=0.2,
-        steps=50,
+        steps=51,
         option_type="Put",
         exercise_style="American",
         model="CRR",
@@ -410,7 +410,7 @@ def test_binomial_models_are_consistent():
         maturity=1.0,
         rate=0.05,
         volatility=0.2,
-        steps=50,
+        steps=51,
         option_type="Put",
         exercise_style="American",
         model="Jarrow-Rudd",
@@ -422,19 +422,49 @@ def test_binomial_models_are_consistent():
         maturity=1.0,
         rate=0.05,
         volatility=0.2,
-        steps=50,
+        steps=51,
         option_type="Put",
         exercise_style="American",
         model="Tian-1993",
         dividend_yield=0.0,
     )
 
+    spec_lr = OptionSpec(
+        spot=100.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.05,
+        volatility=0.2,
+        steps=51,
+        option_type="Put",
+        exercise_style="American",
+        model="Leisen-Reimer",
+        dividend_yield=0.0,
+    )
+
+    spec_tian99 = OptionSpec(
+        spot=100.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.05,
+        volatility=0.2,
+        steps=51,
+        option_type="Put",
+        exercise_style="American",
+        model="Tian-1999",
+        dividend_yield=0.0,
+    )
+
     crr = crr_price(spec_crr)
     jr = jr_price(spec_jr)
     tian93 = tian93_price(spec_tian93)
+    lr = lr_price(spec_lr)
+    tian99 = tian99_price(spec_tian99)
 
     assert abs(crr - jr) < 0.05
     assert abs(crr - tian93) < 0.05
+    assert abs(crr - lr) < 0.05
+    assert abs(crr - tian99) < 0.05
 
 def test_build_binomial_tree_dispatches_crr():
     spec = OptionSpec(

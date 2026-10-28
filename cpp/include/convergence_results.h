@@ -8,6 +8,7 @@ struct ConvergenceResults {
     std::vector<double> jarrow_rudd;
     std::vector<double> tian93;
     std::vector<double> leisen_reimer;
+    std::vector<double> tian99;
 };
 
 [[nodiscard]]

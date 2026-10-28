@@ -154,6 +154,12 @@ lr_price = discrete_models.LR_cpp_price(
     config,
 )
 
+tian99_price = discrete_models.TIAN99_cpp_price(
+    option,
+    market,
+    config,
+)
+
 benchmarks = {}
 
 t_graph = 0 #Diag global variable
@@ -163,7 +169,7 @@ if exercise_style == "European":
     else: bms_price = BMS(spec)[1]
     benchmarks["BMS"] = bms_price
     benchmark = bms_price
-    col1, col2, col3, col4, col5 = st.columns(5)
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
 
     with col1:
         st.metric(
@@ -190,6 +196,12 @@ if exercise_style == "European":
         )
 
     with col5:
+        st.metric(
+            "Tian 1999",
+            f"{tian99_price:.8f}",
+        )
+
+    with col6:
         st.metric(
             "BMS",
             f"{bms_price:.8f}",
@@ -242,7 +254,7 @@ else:
     if (option_type == "Call") and (spec.dividend_yield <= 0.00):
         col1, col2, col3, col4,  = st.columns(4)
 
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
 
     with col1:
         st.metric(
@@ -268,14 +280,20 @@ else:
             f"{lr_price:.8f}",
         )
 
+    with col5:
+        st.metric(
+            "Tian 1999",
+            f"{tian99_price:.8f}",
+        )
+
     if not (option_type == "Call" and spec.dividend_yield == 0.00):
-        with col5:
+        with col6:
             st.metric(
                 "BAW",
                 f"{baw_price:.8f}",
             )
 
-        with col6:
+        with col7:
             st.metric(
                 "JZ",
                 f"{jz_price:.8f}",

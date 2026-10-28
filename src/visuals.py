@@ -80,12 +80,12 @@ def add_spec_box(
         f"Steps      : {spec.steps}",
     ]
 
-    if u is not None:
-        lines.append(f"u          : {u:.6f}")
-    if d is not None:
-        lines.append(f"d          : {d:.6f}")
-    if p is not None:
-        lines.append(f"p          : {p:.6f}")
+    # if u is not None:
+    #     lines.append(f"u          : {u:.6f}")
+    # if d is not None:
+    #     lines.append(f"d          : {d:.6f}")
+    # if p is not None:
+    #     lines.append(f"p          : {p:.6f}")
 
     text = "\n".join(lines)
 
@@ -396,6 +396,13 @@ def plot_price_convergence(
         label="Leisen-Reimer",
     )
 
+    ax.plot(
+        results.steps,
+        results.tian99,
+        marker="o",
+        label="Tian 1999",
+    )
+
     benchmark_styles = {
         "BAW": {"linestyle": "--", "linewidth": 1.6},
         "Ju-Zhong": {"linestyle": ":", "linewidth": 2.0},
@@ -470,10 +477,16 @@ def plot_relative_error(
         * 100.0
     )
 
+    tian99_error = (
+        np.abs(np.asarray(results.tian99) - benchmark)
+        / denominator
+    )
+
     crr_error = np.where(crr_error > 0.0, crr_error, np.nan)
     jr_error = np.where(jr_error > 0.0, jr_error, np.nan)
     tian93_error = np.where(tian93_error > 0.0, tian93_error, np.nan)
     lr_error = np.where(lr_error > 0.0, lr_error, np.nan)
+    tian99_error = np.where(tian99_error > 0.0, tian99_error, np.nan)
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
 
@@ -503,6 +516,13 @@ def plot_relative_error(
         lr_error,
         marker="o",
         label="Leisen-Reimer",
+    )
+
+    ax.plot(
+        results.steps,
+        tian99_error,
+        marker="o",
+        label="Tian 1999",
     )
 
     _format_log_steps_axis(ax)
@@ -549,11 +569,16 @@ def plot_absolute_error(
         np.asarray(results.leisen_reimer) - benchmark
     )
 
+    tian99_error = np.abs(
+        np.asarray(results.tian99) - benchmark
+    )
+
     # Log scale cannot display exact zero.
     crr_error = np.where(crr_error > 0.0, crr_error, np.nan)
     jr_error = np.where(jr_error > 0.0, jr_error, np.nan)
     tian93_error = np.where(tian93_error > 0.0, tian93_error, np.nan)
     lr_error = np.where(lr_error > 0.0, lr_error, np.nan)
+    tian99_error = np.where(tian99_error > 0.0, tian99_error, np.nan)
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
 
@@ -583,6 +608,13 @@ def plot_absolute_error(
         lr_error,
         marker="o",
         label="Leisen-Reimer",
+    )
+
+    ax.plot(
+        results.steps,
+        tian99_error,
+        marker="o",
+        label="Tian 1999",
     )
 
     _format_log_steps_axis(ax)
@@ -630,6 +662,10 @@ def plot_signed_error(
         np.asarray(results.leisen_reimer) - benchmark
     )
 
+    tian99_error = (
+        np.asarray(results.tian99) - benchmark
+    )
+
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
 
     ax.plot(
@@ -658,6 +694,13 @@ def plot_signed_error(
         lr_error,
         marker="o",
         label="Leisen-Reimer",
+    )
+
+    ax.plot(
+        results.steps,
+        tian99_error,
+        marker="o",
+        label="Tian 1999",
     )
 
     _format_log_steps_axis(ax)

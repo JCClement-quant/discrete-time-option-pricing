@@ -21,6 +21,7 @@ The project emphasizes:
 | Black-Merton-Scholes | ✓ |  x  |         ✓         |         ✓         |
 | Barone Adessi-Whiley | ✓ | x |        BMS        |         ✓         |
 | Ju-Zhong | ✓ | x |        BMS        |         ✓         |
+| Tian 1999 | ✓ | ✓ |        ✓        |         ✓         |
 
 The current implementation supports:
 
@@ -65,8 +66,9 @@ Each binomial model is therefore responsible only for its own calibration:
 
 - Cox–Ross–Rubinstein determines its specific \(u\), \(d\), and \(p\);
 - Jarrow–Rudd determines its specific \(u\), \(d\), and \(p\);
-- Tian 1993 determines its specific \(u\), \(d\), and \(p\).
-- Leisen-Reimer builds its specific \(u\), \(d\), and \(p\) out of BMS (d1) and (d2) through Peizer and Pratt's inversion
+- Tian 1993 determines its specific \(u\), \(d\), and \(p\);
+- Leisen-Reimer builds its specific \(u\), \(d\), and \(p\) out of BMS (d1) and (d2) through Peizer and Pratt's inversion;
+- Tian 1999 determines its specific \(u\), \(d\), and \(p\).
 
 The resulting parameters are then passed to a shared pricing engine.
 
@@ -95,8 +97,9 @@ It supports:
 - European and American exercise;
 - call and put pricing;
 - continuous dividend yield;
-- CRR averaged, JR, TIAN93, LR prices for N>1000;
+- CRR averaged, JR, TIAN93, LR prices, TIAN99 for N>1000;
 - BMS benchmark for European option;
+- BAW and JZ benchmarks for American option;
 - convergence, absolute and relative error;
 - performance analysis.
 
@@ -231,6 +234,7 @@ The compiled extension exposes:
 - `JR_cpp_price`
 - `TIAN93_cpp_price`
 - `LR_cpp_price`
+- `TIAN99_cpp_price`
 - `ConvergenceResults`
 - `binomial_convergence`
 - `binomial_convergence_unthreaded`
@@ -286,11 +290,10 @@ The tests cover:
 - Python model convergence;
 - comparison with Black–Scholes–Merton for European exercise;
 - Python/C++ numerical parity;
-- CRR, Jarrow–Rudd, Tian-1993 and Leisen-Reimer implementations.
+- CRR, Jarrow–Rudd, Tian-1993, Tian-1999 and Leisen-Reimer implementations.
 
 ## Planned extensions
 
-- Tian 1999 binomial model
 - trinomial trees
 - analytical and numerical Greeks
 - discrete-dividend handling
@@ -309,14 +312,20 @@ The tests cover:
 - Robert Jarrow and Andrew Rudd,  
   *Approximate Option Valuation for Arbitrary Stochastic Processes* (1982)
 
-- Yisong Tian,  
+- Yisong "Sam" Tian,  
   *A Modified Lattice Approach to Option Pricing* (1993)
 
 - Dietmar Leisen and Matthias Reimer,  
   *Binomial Models for Option Valuation — Examining and Improving Convergence* (1995)
 
 - Giovanni Barone-Adessi and Robert Whaley,   
- *Efficient Analytic Approximation of American Option Values*
+ *Efficient Analytic Approximation of American Option Values* (1987)
+
+- Nengjiu Ju and Rui Zhong,
+  *An Approximate Formula for Pricing American Options* (1999)
+
+- Yisong "Sam" Tian,  
+  *A Flexible Binomial Option Pricing Model* (1999)
 
 ### Useful papers
 
@@ -345,7 +354,8 @@ The tests cover:
 
 Active development.
 
-The CRR, Jarrow–Rudd, Tian-1993 and LR models are operational in both Python and C++.
+The CRR, Jarrow–Rudd, Tian-1993, Tian-1999 and LR models are operational in both Python and C++.
+BMS, BAW and JZ are operational in Python.
 
 The project currently supports:
 
@@ -356,5 +366,7 @@ The project currently supports:
 - Black–Scholes–Merton convergence testing;
 - interactive Streamlit pricing;
 - high-performance C++ pricing;
-- cross-language numerical validation
-- BAW for US Calls and Put and LR benchmark.
+- cross-language numerical validation;
+- BAW for US Calls and Put and LR benchmark;
+- JZ correction for BAW;
+- Numerical analysis for BAW/JZ S* frontier and American premium.

@@ -142,6 +142,9 @@ namespace discrete_models {
     double LR_root_exercise_gap(const VanillaOption& option, const MarketData& market, const TreeConfig& config);
 
     [[nodiscard]]
+    double TIAN99_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config);
+
+    [[nodiscard]]
     double binomial_price(const VanillaOption& option, const MarketData& market, const TreeConfig& config,
         const TreeParameters& TreeParams);
 

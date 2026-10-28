@@ -70,6 +70,12 @@ def LR_root(
     config: TreeConfig,
 ) -> float: ...
 
+def TIAN99_cpp_price(
+    option: VanillaOption,
+    market: MarketData,
+    config: TreeConfig,
+) -> float: ...
+
 
 StepsGrid = Sequence[int] | npt.NDArray[np.integer[Any]]
 
@@ -93,6 +99,7 @@ class ConvergenceResults:
         jarrow_rudd: Sequence[float],
         tian93: Sequence[float],
         leisen_reimer: Sequence[float],
+        tian99: Sequence[float],
     ) -> None: ...
 
 def Binomial_Convergence(

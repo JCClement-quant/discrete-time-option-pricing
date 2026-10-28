@@ -21,7 +21,7 @@ with st.sidebar:
 
     model_label = st.selectbox(
         "Model",
-        options=["CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer"],
+        options=["CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer", "Tian-1999"],
     )
 
     option_type = st.selectbox(
@@ -131,13 +131,23 @@ with metric_col:
     )
 
 with parameter_col:
-    st.write(
-        {
-            "u": result.u,
-            "d": result.d,
-            "p": result.p,
-        }
-    )
+    if spec.model == "Tian-1999":
+        st.write(
+            {
+                "u": result.u,
+                "d": result.d,
+                "p": result.p,
+                "lambda": result.the_lambda,
+            }
+        )
+    else:
+        st.write(
+            {
+                "u": result.u,
+                "d": result.d,
+                "p": result.p,
+            }
+        )
 
 
 fig, ax = render_binomial_tree(

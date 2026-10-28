@@ -285,8 +285,61 @@ namespace discrete_models {
 
     }
 
+    double TIAN99_price(const VanillaOption &option, const MarketData &market, const TreeConfig &treeconfig) {
+        if (market.spot <= 0.0) {
+            throw std::invalid_argument(
+                "Spot must be strictly positive."
+            );
+        }
+
+        if (option.maturity() <= 0.0) {
+            throw std::invalid_argument(
+                "Maturity must be strictly positive."
+            );
+        }
+
+        if (market.volatility <= 0.0) {
+            throw std::invalid_argument(
+                "Volatility must be strictly positive."
+            );
+        }
+
+        if (treeconfig.steps <= 0) {
+            throw std::invalid_argument(
+                "The number of steps must be strictly positive."
+            );
+        }
+        const long steps = treeconfig.steps;
+        const double dt = option.maturity()/static_cast<double>(steps);
+        const double carry_rate = market.rate - market.dividend_yield;
+        const double sigma_sqrt_dt = market.volatility * std::sqrt(dt);
+        const double u_0 = std::exp(sigma_sqrt_dt);
+        const double d_0 = std::exp(-sigma_sqrt_dt);
+        const double j_0 = std::round((std::log(option.strike()/market.spot) - treeconfig.steps * std::log(d_0)) /
+            std::log(u_0/d_0));
+        const double the_lambda = (std::log(option.strike()/market.spot) - ( 2 * j_0 - treeconfig.steps) *
+            sigma_sqrt_dt) / (treeconfig.steps * std::pow(sigma_sqrt_dt, 2));
+        const double u = std::exp(sigma_sqrt_dt + the_lambda * std::pow(sigma_sqrt_dt, 2));
+        const double d = std::exp(-sigma_sqrt_dt + the_lambda * std::pow(sigma_sqrt_dt, 2));
+
+        const double p = (std::exp(carry_rate * dt) - d)/(u - d);
+
+        const TreeParameters treeparams{
+            .u = u,
+            .d = d,
+            .p = p
+        };
+
+        if (p <= 0.0 || p >= 1.0) {
+            throw std::invalid_argument(
+                "TIAN99 risk-neutral probability is outside ]0, 1[.");
+        }
+
+        return binomial_price(option,market,treeconfig, treeparams);
+    }
+
     BinomialResult binomial_evaluate(const VanillaOption &option, const MarketData &market, const TreeConfig &treeconfig,
-        const TreeParameters &treeparams) {
+                                     const TreeParameters &treeparams) {
         if (treeparams.p <= 0.0 || treeparams.p >= 1.0) {
             throw std::invalid_argument(
                 "Risk-neutral probability is outside ]0, 1[.");

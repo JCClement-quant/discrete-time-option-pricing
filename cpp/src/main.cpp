@@ -22,9 +22,9 @@ int main() {
         discrete_models::ExerciseStyle::European};
 
     const discrete_models::MarketData market_data{
-        .spot = 120.00,
+        .spot = 100.00,
         .rate = 0.05,
-        .dividend_yield = 0.50,
+        .dividend_yield = 0.00,
         .volatility = 0.20
     };
 
@@ -98,21 +98,20 @@ int main() {
 
     double price = CRR_price(option_call_eu, market_data, tree_config);
     cout << "Prix CRR du call europeen : " << price << endl;
-    price = LR_price(option_call_eu, market_data, tree_config);
-    cout << "Prix LR du call europeen : " << price << endl;
+    price = TIAN99_price(option_call_eu, market_data, tree_config);
+    cout << "Prix TIAN99 du call europeen : " << price << endl;
     price = CRR_price(option_call_us, market_data, tree_config);
     cout << "Prix CRR du call americain : " << price << endl;
-    price = LR_price(option_call_us, market_data, tree_config);
-    cout << "Prix LR du call americain : " << price << endl;
+    price = TIAN99_price(option_call_us, market_data, tree_config);
+    cout << "Prix TIAN99 du call americain : " << price << endl;
     price = CRR_price(option_put_eu, market_data, tree_config);
     cout << "Prix CRR du put europeen : " << price << endl;
-    price = LR_price(option_put_eu, market_data, tree_config);
-    cout << "Prix LR du put europeen : " << price << endl;
+    price = TIAN99_price(option_put_eu, market_data, tree_config);
+    cout << "Prix TIAN99 du put europeen : " << price << endl;
     price = CRR_price(option_put_us, market_data, tree_config);
     cout << "Prix CRR du put americain : " << price << endl;
-    price = LR_price(option_put_us, market_data, tree_config);
-    cout << "Prix LR du put americain: " << price << endl;
-    cout << LR_root_exercise_gap(option_call_us, market_data, tree_config) << endl;
-    cout << LR_root_exercise_gap(option_put_us, market_data, tree_config) << endl;
+    price = TIAN99_price(option_put_us, market_data, tree_config);
+    cout << "Prix TIAN99 du put americain: " << price << endl;
+
     return 0;
 }
