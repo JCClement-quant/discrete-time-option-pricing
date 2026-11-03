@@ -42,10 +42,13 @@ if(WIN32 AND NOT MSVC)
     )
 endif()
 
+# Local development override only.
+# The project builds correctly without forcing the output into a virtualenv.
+
 # Auto copy in Python .venv
-set_target_properties(discrete_models PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY "D:/01b-Dev/Python/Projects/Discrete_models/.venv/Lib/site-packages"
-)
+# set_target_properties(discrete_models PROPERTIES
+#       LIBRARY_OUTPUT_DIRECTORY "D:/01b-Dev/Python/Projects/Discrete_models/.venv/Lib/site-packages"
+#)
 
 # =====================================================================
 # TARGET 2 : TEST LAB C++ (cpp)

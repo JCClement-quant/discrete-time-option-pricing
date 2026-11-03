@@ -1,7 +1,6 @@
 #pragma once
 #include<memory>
 
-
 namespace discrete_models {
     enum class ExerciseStyle {
         European,
