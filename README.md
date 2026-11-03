@@ -390,3 +390,13 @@ The project currently supports:
 - BAW for US Calls and Put and LR benchmark;
 - JZ correction for BAW;
 - Numerical analysis for BAW/JZ S* frontier and American premium.
+
+## License
+
+This project is licensed under the PolyForm Noncommercial License 1.0.0.
+
+Non-commercial use, study, research, modification and redistribution are permitted under the terms of the license.
+
+Commercial use requires prior written permission from the copyright holder.
+
+Copyright © 2026 Jean-Charles Clement.
