@@ -152,6 +152,22 @@ These residual differences are consistent with floating-point rounding and minor
 
 European-option prices are also compared with their Black–Scholes–Merton limits.
 
+Numerical early-exercise artefact for non-dividend-paying American calls
+
+For a non-dividend-paying call with deterministic non-negative interest rates, early exercise is theoretically never
+optimal, so the American and European prices should coincide.
+
+At very large tree depths, however, some lattice parameterisations may generate extreme spot values at the edges of
+the tree. In those regions, the continuation value and the intrinsic value can differ by an amount that is tiny
+relative to the magnitude of the spot. With finite-precision floating-point arithmetic, this loss of significance 
+can lead to isolated — or even numerous — nodes being incorrectly classified as early-exercise nodes.
+
+The example below shows this effect for a 10,000-step tree. The root price remains essentially unchanged,
+even though a large number of extreme CRR nodes are flagged as early exercise. This is a numerical artefact
+of the lattice and floating-point arithmetic, not an economically meaningful exercise boundary.
+
+![Early exercise artefact for American call](figures/Cpp__14082026__JR_Call_US__early_exercise.png)
+
 ### Convergence analysis
 
 - Native C++ convergence engine exposed to Python through pybind11
