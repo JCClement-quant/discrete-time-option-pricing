@@ -5,8 +5,8 @@ from unittest import case
 import matplotlib.pyplot as plt
 import streamlit as st
 
-from src.pricers import OptionSpec, build_binomial_tree
-from src.visuals import add_spec_box, render_binomial_tree
+from src.pricers import OptionSpec, build_tree
+from src.visuals import add_spec_box, render_binomial_tree, render_trinomial_tree
 
 st.set_page_config(
     page_title = "Tree Explorer",
@@ -21,7 +21,7 @@ with st.sidebar:
 
     model_label = st.selectbox(
         "Model",
-        options=["CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer", "Tian-1999"],
+        options=["CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer", "Tian-1999", "Trinomial-Kamrad-Ritchken"],
     )
 
     option_type = st.selectbox(
@@ -113,7 +113,7 @@ spec = OptionSpec(
 )
 
 try:
-    result = build_binomial_tree(spec)
+    result = build_tree(spec)
 
 except ValueError as exc:
     st.error(str(exc))
@@ -140,6 +140,18 @@ with parameter_col:
                 "lambda": result.the_lambda,
             }
         )
+    elif spec.model == "Trinomial-Kamrad-Ritchken":
+        st.write(
+            {
+                "u": result.u,
+                "m": result.m,
+                "d": result.d,
+                "p_u": result.p_u,
+                "p_m": result.p_m,
+                "p_d": result.p_d,
+                "lambda": result.the_lambda,
+            }
+        )
     else:
         st.write(
             {
@@ -149,37 +161,70 @@ with parameter_col:
             }
         )
 
+if spec.model == "Trinomial-Kamrad-Ritchken":
+    fig, ax = render_trinomial_tree(
+        spec=spec,
+        spot_tree=result.spot_tree,
+        option_tree=result.option_tree,
+        exercise_tree=result.exercise_tree,
+        mode=display_mode,
+        decimals=3,
+        fontsize=7,
+        node_width=1.55,
+        node_height=0.95,
+        x_spacing=1.8,
+        y_spacing=1.25,
+        title=(
+            f"{model_label} · "
+            f"{exercise_style.capitalize()} "
+            f"{option_type.capitalize()}"
+        ),
+    )
 
-fig, ax = render_binomial_tree(
-    spec=spec,
-    spot_tree=result.spot_tree,
-    option_tree=result.option_tree,
-    exercise_tree=result.exercise_tree,
-    mode=display_mode,
-    decimals=3,
-    fontsize=7,
-    node_width=1.55,
-    node_height=0.95,
-    x_spacing=1.8,
-    y_spacing=1.25,
-    title=(
-        f"{model_label} · "
-        f"{exercise_style.capitalize()} "
-        f"{option_type.capitalize()}"
-    ),
-)
+    add_spec_box(
+        ax=ax,
+        spec=spec,
+        model_name=model_label,
+        u=result.u,
+        d=result.d,
+        p_u=result.p_u,
+        p_m=result.p_m,
+        p_d = result.p_d,
+        x=-0.12,
+        y=0.98,
+        fontsize=9,
+    )
+else:
+    fig, ax = render_binomial_tree(
+        spec=spec,
+        spot_tree=result.spot_tree,
+        option_tree=result.option_tree,
+        exercise_tree=result.exercise_tree,
+        mode=display_mode,
+        decimals=3,
+        fontsize=7,
+        node_width=1.55,
+        node_height=0.95,
+        x_spacing=1.8,
+        y_spacing=1.25,
+        title=(
+            f"{model_label} · "
+            f"{exercise_style.capitalize()} "
+            f"{option_type.capitalize()}"
+        ),
+    )
 
-add_spec_box(
-    ax=ax,
-    spec=spec,
-    model_name=model_label,
-    u=result.u,
-    d=result.d,
-    p=result.p,
-    x=-0.12,
-    y=0.98,
-    fontsize=9,
-)
+    add_spec_box(
+        ax=ax,
+        spec=spec,
+        model_name=model_label,
+        u=result.u,
+        d=result.d,
+        p=result.p,
+        x=-0.12,
+        y=0.98,
+        fontsize=9,
+    )
 
 st.pyplot(fig, width="stretch")
 plt.close(fig)

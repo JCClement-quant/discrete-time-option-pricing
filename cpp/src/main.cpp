@@ -1,4 +1,5 @@
 #include "binomial_pricer.h"
+#include "trinomial_pricer.h"
 #include "convergence_results.h"
 #include <iostream>
 #include <chrono>
@@ -29,7 +30,7 @@ int main() {
     };
 
     const discrete_models::TreeConfig tree_config{
-        .steps = 10001
+        .steps = 1001
     };
 
     /*
@@ -112,6 +113,16 @@ int main() {
     cout << "Prix CRR du put americain : " << price << endl;
     price = TIAN99_price(option_put_us, market_data, tree_config);
     cout << "Prix TIAN99 du put americain: " << price << endl;
+    const discrete_models::KRconfig kr_config;
+
+    price = Kamrad_Ritchken(option_call_eu, market_data, tree_config, kr_config );
+    cout << "Prix Kamrad-Ritchken du call europeen : " << price << endl;
+    price = Kamrad_Ritchken(option_call_us, market_data, tree_config, kr_config );
+    cout << "Prix Kamrad-Ritchken du call americain : " << price << endl;
+    price = Kamrad_Ritchken(option_put_eu, market_data, tree_config, kr_config );
+    cout << "Prix Kamrad-Ritchken du put europeen : " << price << endl;
+    price = Kamrad_Ritchken(option_put_us, market_data, tree_config, kr_config );
+    cout << "Prix Kamrad-Ritchken du put americain : " << price << endl;
 
     return 0;
 }

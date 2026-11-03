@@ -40,6 +40,10 @@ class TreeConfig:
     steps: int
     def __init__(self)->None:...
 
+class KRconfig:
+    def __init__(self)->None:...
+    the_lambda: float
+
 def CRR_cpp_price(
     option: VanillaOption,
     market: MarketData,
@@ -76,6 +80,13 @@ def TIAN99_cpp_price(
     config: TreeConfig,
 ) -> float: ...
 
+def KR_cpp_price(
+    option: VanillaOption,
+    market: MarketData,
+    config: TreeConfig,
+    krconfig: KRconfig = ...,
+) -> float: ...
+
 
 StepsGrid = Sequence[int] | npt.NDArray[np.integer[Any]]
 
@@ -86,6 +97,8 @@ class ConvergenceResults:
     jarrow_rudd: list[float]
     tian93: list[float]
     leisen_reimer:list[float]
+    tian99: Sequence[float]
+    kamrad_ritchken: Sequence[float]
 
     @overload
     def __init__(self) -> None: ...
@@ -100,6 +113,7 @@ class ConvergenceResults:
         tian93: Sequence[float],
         leisen_reimer: Sequence[float],
         tian99: Sequence[float],
+        kamrad_ritchken: Sequence[float],
     ) -> None: ...
 
 def Binomial_Convergence(
@@ -108,11 +122,24 @@ def Binomial_Convergence(
     steps_grid: StepsGrid,
 ) -> ConvergenceResults: ...
 
+def Trinomial_Convergence(
+    option: VanillaOption,
+    market: MarketData,
+    steps_grid: StepsGrid,
+    krconfig: KRconfig,
+) -> ConvergenceResults: ...
 
 def Binomial_Convergence_Unthreaded(
     option: VanillaOption,
     market: MarketData,
     steps_grid: StepsGrid,
+) -> ConvergenceResults: ...
+
+def Trinomial_Convergence_Unthreaded(
+    option: VanillaOption,
+    market: MarketData,
+    steps_grid: StepsGrid,
+    krconfig: KRconfig = ...,
 ) -> ConvergenceResults: ...
 
 # ===================================================== #

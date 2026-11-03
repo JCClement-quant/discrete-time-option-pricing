@@ -30,8 +30,12 @@ def add_spec_box(
     spec : OptionSpecLike,
     model_name: str = "Jarrow-Rudd",
     u: Optional[float] = None,
+    m: Optional[float] = None,
     d: Optional[float] = None,
     p: Optional[float] = None,
+    p_u: Optional[float] = None,
+    p_m: Optional[float] = None,
+    p_d: Optional[float] = None,
     loc: str = "upper left",
     fontsize: int = 9,
     x: Optional[float] = None,
@@ -361,8 +365,196 @@ def _format_log_steps_axis(ax) -> None:
         )
     )
 
+def _trinomial_node_coordinates(
+    step: int,
+    j: int,
+    x_spacing: float = 1.8,
+    y_spacing: float = 1.15,
+) -> tuple[float, float]:
+    """
+    Map a trinomial node (step, j) to 2D plotting coordinates.
+
+    At time step i, valid node indices are j = 0, ..., 2*i.
+    The vertical state is k = i - j, so the center node has k = 0.
+    """
+    x = step * x_spacing
+    state = step - j
+    y = state * y_spacing
+    return float(x), float(y)
+
+def render_trinomial_tree(
+    spec: OptionSpecLike,
+    spot_tree: np.ndarray,
+    option_tree: Optional[np.ndarray] = None,
+    exercise_tree: Optional[np.ndarray] = None,
+    mode: DisplayMode = "combined",
+    decimals: int = 4,
+    title: Optional[str] = None,
+    show_arrows: bool = True,
+    figsize: tuple[float, float] | None = None,
+    fontsize: int = 8,
+    node_width: Optional[float] = None,
+    node_height: Optional[float] = None,
+    x_spacing: float = 1.8,
+    y_spacing: float = 1.15,
+):
+    """
+        Render a recombining trinomial tree using Matplotlib.
+    """
+    if spot_tree.ndim != 2:
+        raise ValueError("spot_tree must be a 2D array")
+    n_steps = spot_tree.shape[0] - 1
+
+    expected_width = 2 * n_steps + 1
+    if spot_tree.shape[1] != expected_width:
+        raise ValueError(
+            "spot_tree must have shape (n+1, 2*n+1) for a trinomial tree"
+        )
+
+    if mode in ("option", "combined") and option_tree is None:
+        raise ValueError(
+            "option_tree is required for option or combined mode."
+        )
+
+    if option_tree is not None and option_tree.shape != spot_tree.shape:
+        raise ValueError(
+            "option_tree must have the same shape as spot_tree."
+        )
+
+    if exercise_tree is not None and exercise_tree.shape != spot_tree.shape:
+        raise ValueError(
+            "exercise_tree must have the same shape as spot_tree."
+        )
+
+    node_width_value = (
+        node_width if node_width is not None else 1.25
+    )
+
+    node_height_value = (
+        node_height if node_height is not None else 0.55
+    )
+
+    if figsize is None:
+        figsize = (
+            max(8.0, 2.0 + n_steps * x_spacing),
+            max(5.0, 2.0 + 2 * n_steps * y_spacing),
+        )
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    if show_arrows:
+        for i in range(n_steps):
+            for j in range(2 * i + 1):
+                if np.isnan(spot_tree[i, j]):
+                    continue
+
+                x0, y0 = _trinomial_node_coordinates(
+                    i, j, x_spacing=x_spacing, y_spacing=y_spacing
+                )
+
+                # Up child: (i+1, j)
+                x_up, y_up = _trinomial_node_coordinates(
+                    i + 1, j, x_spacing=x_spacing, y_spacing=y_spacing
+                )
+                ax.plot([x0, x_up], [y0, y_up], linewidth=1.0, color="#2e9b4b", zorder=1)
+
+                # Middle child: (i+1, j+1)
+                x_mid, y_mid = _trinomial_node_coordinates(
+                    i + 1, j + 1, x_spacing=x_spacing, y_spacing=y_spacing
+                )
+                ax.plot([x0, x_mid], [y0, y_mid], linewidth=1.0, color="#d8a600", zorder=1)
+
+                # Down child: (i+1, j+2)
+                x_down, y_down = _trinomial_node_coordinates(
+                    i + 1, j + 2, x_spacing=x_spacing, y_spacing=y_spacing
+                )
+                ax.plot([x0, x_down], [y0, y_down], linewidth=1.0, color="#c43d3d", zorder=1)
+
+    for i in range(n_steps + 1):
+        for j in range(2 * i + 1):
+            s_ij = spot_tree[i, j]
+            if np.isnan(s_ij):
+                continue
+
+            x, y = _trinomial_node_coordinates(i, j, x_spacing=x_spacing, y_spacing=y_spacing)
+
+            if mode == "spot":
+                text = f"S={_format_number(s_ij, decimals)}"
+                facecolor = "#fff2a8"
+                edgecolor = "black"
+
+            elif mode == "option":
+                v_ij = option_tree[i, j]
+                text = f"V={_format_number(v_ij, decimals)}"
+                facecolor = "#bfe7ff"
+                edgecolor = "black"
+
+            else:
+                v_ij = option_tree[i, j]
+                text = (
+                    f"S={_format_number(s_ij, decimals)}\n"
+                    f"V={_format_number(v_ij, decimals)}"
+                )
+                facecolor = "white"
+                edgecolor = "black"
+
+            linewidth = 1.0
+            edgecolor = "black"
+
+            # Terminal nodes first
+            if i == n_steps:
+                edgecolor = "#2b6cff"  # blue
+                linewidth = 2.0
+
+            # Early exercise overrides only before maturity
+            elif exercise_tree is not None and bool(exercise_tree[i, j]):
+                edgecolor = "#cc2f2f"  # red
+                linewidth = 2.2
+
+            _draw_node_box(
+                ax=ax,
+                x=x,
+                y=y,
+                text=text,
+                facecolor=facecolor,
+                edgecolor=edgecolor,
+                linewidth=linewidth,
+                width=node_width_value,
+                height=node_height_value,
+                fontsize=fontsize,
+            )
+    if title is None:
+        if mode == "spot":
+            title_value = "Binomial Spot Tree"
+        elif mode == "option":
+            title_value = "Binomial Option Value Tree"
+        else:
+            title_value = "Binomial Spot / Option Tree"
+    else: title_value = title
+
+    if spec.exercise_style == "American":
+        s = 'Blue frames: maturity nodes · Red frames: early exercise nodes'
+    else:
+        s = 'Blue frames: maturity nodes'
+
+    ax.axis("off")
+    ax.set_title(title_value)
+
+    ax.text(
+        0.5,
+        0.98,
+        s,
+        transform=ax.transAxes,
+        ha="center",
+        va="bottom",
+        fontsize=9,
+    )
+
+    return fig, ax
+
 def plot_price_convergence(
     results: "ConvergenceResults",
+    results_trino: "ConvergenceResults | None" = None,
     benchmarks: dict[str, float] | None = None,
 ) -> Figure:
 
@@ -401,6 +593,13 @@ def plot_price_convergence(
         results.tian99,
         marker="o",
         label="Tian 1999",
+    )
+
+    ax.plot(
+        results.steps,
+        results_trino.kamrad_ritchken,
+        marker="o",
+        label="KR-Trino",
     )
 
     benchmark_styles = {
@@ -442,6 +641,7 @@ def plot_price_convergence(
 def plot_relative_error(
     results: "ConvergenceResults",
     benchmark: float,
+    results_trino: "ConvergenceResults | None" = None,
 ) -> Figure:
 
     if benchmark == 0.0:
@@ -482,11 +682,17 @@ def plot_relative_error(
         / denominator
     )
 
+    kr_error = (
+            np.abs(np.asarray(results_trino.kamrad_ritchken) - benchmark)
+            / denominator
+    )
+
     crr_error = np.where(crr_error > 0.0, crr_error, np.nan)
     jr_error = np.where(jr_error > 0.0, jr_error, np.nan)
     tian93_error = np.where(tian93_error > 0.0, tian93_error, np.nan)
     lr_error = np.where(lr_error > 0.0, lr_error, np.nan)
     tian99_error = np.where(tian99_error > 0.0, tian99_error, np.nan)
+    kr_error = np.where(kr_error > 0.0, kr_error, np.nan)
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
 
@@ -523,6 +729,13 @@ def plot_relative_error(
         tian99_error,
         marker="o",
         label="Tian 1999",
+    )
+
+    ax.plot(
+        results_trino.steps,
+        kr_error,
+        marker="o",
+        label="KR-Trino",
     )
 
     _format_log_steps_axis(ax)
@@ -549,6 +762,7 @@ def plot_relative_error(
 def plot_absolute_error(
     results: "ConvergenceResults",
     benchmark: float,
+    results_trino: "ConvergenceResults | None" = None,
 ) -> Figure:
 
     steps = np.asarray(results.steps)
@@ -573,12 +787,15 @@ def plot_absolute_error(
         np.asarray(results.tian99) - benchmark
     )
 
+    kr_error = np.abs(np.asarray(results_trino.kamrad_ritchken) - benchmark)
+
     # Log scale cannot display exact zero.
     crr_error = np.where(crr_error > 0.0, crr_error, np.nan)
     jr_error = np.where(jr_error > 0.0, jr_error, np.nan)
     tian93_error = np.where(tian93_error > 0.0, tian93_error, np.nan)
     lr_error = np.where(lr_error > 0.0, lr_error, np.nan)
     tian99_error = np.where(tian99_error > 0.0, tian99_error, np.nan)
+    kr_error = np.where(kr_error > 0.0, kr_error, np.nan)
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
 
@@ -615,6 +832,13 @@ def plot_absolute_error(
         tian99_error,
         marker="o",
         label="Tian 1999",
+    )
+
+    ax.plot(
+        results_trino.steps,
+        kr_error,
+        marker="o",
+        label="KR-Trino",
     )
 
     _format_log_steps_axis(ax)
@@ -642,6 +866,7 @@ def plot_absolute_error(
 def plot_signed_error(
     results: "ConvergenceResults",
     benchmark: float,
+    results_trino: "ConvergenceResults | None" = None,
 ) -> Figure:
 
     steps = np.asarray(results.steps)
@@ -665,6 +890,8 @@ def plot_signed_error(
     tian99_error = (
         np.asarray(results.tian99) - benchmark
     )
+
+    kr_error = np.asarray(results_trino.kamrad_ritchken) - benchmark
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
 
@@ -701,6 +928,13 @@ def plot_signed_error(
         tian99_error,
         marker="o",
         label="Tian 1999",
+    )
+
+    ax.plot(
+        results.steps,
+        kr_error,
+        marker="o",
+        label="KR-Trino",
     )
 
     _format_log_steps_axis(ax)

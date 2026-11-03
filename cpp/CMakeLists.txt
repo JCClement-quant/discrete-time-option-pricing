@@ -16,7 +16,8 @@ find_package(pybind11 REQUIRED)
 set(CORE_FILES
         src/binomial_pricer.cpp
         src/convergence_results.cpp
-        include/convergence_results.h
+        src/trinomial_pricer.cpp
+        # include/convergence_results.h
         src/functions.cpp
 )
 

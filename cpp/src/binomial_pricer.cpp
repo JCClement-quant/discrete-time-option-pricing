@@ -356,7 +356,7 @@ namespace discrete_models {
             static_cast<std::size_t>(treeconfig.steps +1 ));
 
         // Terminal values
-        double node_spot = market.spot * std::pow(treeparams.d, treeconfig.steps );
+        double node_spot = market.spot * std::pow(treeparams.d, treeconfig.steps);
         const double u_over_d = treeparams.u / treeparams.d;
 
         // Terminal payoff
@@ -383,7 +383,7 @@ namespace discrete_models {
         // double lowest_spot = market.spot * std::pow(treeparams.d, treeconfig.steps - 1);
 
         // Backward induction
-        for ( int i :std::views::iota(0, treeconfig.steps) | std::views::reverse) {
+        for (int i :std::views::iota(0, treeconfig.steps) | std::views::reverse) {
             // S_{i,0} = S_0 * d^i
             double base_spot = market.spot * std::pow(treeparams.d, i);
             double current_spot = base_spot;
@@ -395,9 +395,8 @@ namespace discrete_models {
                     discount * (treeparams.p * option_values[static_cast<std::size_t>(j) +1 ] +q * value);
                 const double intrinsic = option.payoff(current_spot);
                 if (is_american) {
-
                     value = std::max(continuation_value,intrinsic);
-                    current_spot *= u_over_d;
+
                 } else {
                     value = continuation_value;
                 }
@@ -405,6 +404,7 @@ namespace discrete_models {
                     result.root_intrinsic = intrinsic;
                     result.root_continuation = continuation_value;
                 }
+                current_spot *= u_over_d;
             }
         }
         result.price = option_values.front();

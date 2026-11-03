@@ -51,5 +51,7 @@ def validate_option_inputs(
     if exercise_style not in ("European", "American"):
         raise ValueError("exercise_style must be 'European' or 'American'")
 
-    if model not in ("CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer", "Tian-1999"):
-        raise ValueError("model must be 'CRR', 'Jarrow-Rudd' or 'Tian-1993' or 'Leisen-Reimer' or 'Tian-1999'")
+    if model not in ("CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer", "Tian-1999", "Trinomial-Kamrad-Ritchken"):
+        raise ValueError("model must be 'CRR', 'Jarrow-Rudd', 'Tian-1993', 'Leisen-Reimer', "
+                         "'Tian-1999' or 'Trinomial-Kamrad-Ritchken'")
+

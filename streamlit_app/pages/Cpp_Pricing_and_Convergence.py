@@ -124,6 +124,8 @@ config_shifted = discrete_models.TreeConfig(
     int(steps) + 1
 )
 
+krconfig = discrete_models.KRConfig()
+
 crr_price = discrete_models.CRR_cpp_price(
     option,
     market,
@@ -160,6 +162,13 @@ tian99_price = discrete_models.TIAN99_cpp_price(
     config,
 )
 
+kr_price = discrete_models.KR_cpp_price(
+    option,
+    market,
+    config,
+
+)
+
 benchmarks = {}
 
 t_graph = 0 #Diag global variable
@@ -169,7 +178,7 @@ if exercise_style == "European":
     else: bms_price = BMS(spec)[1]
     benchmarks["BMS"] = bms_price
     benchmark = bms_price
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
 
     with col1:
         st.metric(
@@ -203,6 +212,12 @@ if exercise_style == "European":
 
     with col6:
         st.metric(
+            "Kramrad-Ritchken",
+            f"{kr_price:.8f}",
+        )
+
+    with col7:
+        st.metric(
             "BMS",
             f"{bms_price:.8f}",
      )
@@ -213,20 +228,31 @@ if exercise_style == "European":
         market,
         steps_grid,
     )
+
+    results_trino = discrete_models.Trinomial_Convergence(
+        option,
+        market,
+        steps_grid,
+        krconfig,
+    )
+
     t_graph = perf_counter()
     fig_price = plot_price_convergence(
         results,
+        results_trino,
         benchmarks=benchmarks,
     )
 
     fig_abs = plot_absolute_error(
         results,
         benchmark,
+        results_trino,
     )
 
     fig_rel = plot_relative_error(
         results,
         benchmark,
+        results_trino,
     )
 
     plot_build_time = perf_counter() - t_graph
@@ -254,7 +280,7 @@ else:
     if (option_type == "Call") and (spec.dividend_yield <= 0.00):
         col1, col2, col3, col4,  = st.columns(4)
 
-    col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
+    col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
 
     with col1:
         st.metric(
@@ -286,14 +312,20 @@ else:
             f"{tian99_price:.8f}",
         )
 
+    with col6:
+        st.metric(
+            "Kramrad-Ritchken",
+            f"{kr_price:.8f}",
+        )
+
     if not (option_type == "Call" and spec.dividend_yield == 0.00):
-        with col6:
+        with col7:
             st.metric(
                 "BAW",
                 f"{baw_price:.8f}",
             )
 
-        with col7:
+        with col8:
             st.metric(
                 "JZ",
                 f"{jz_price:.8f}",
@@ -306,9 +338,18 @@ else:
         market,
         steps_grid,
     )
+
+    results_trino = discrete_models.Trinomial_Convergence(
+        option,
+        market,
+        steps_grid,
+        krconfig,
+    )
+
     t_graph = perf_counter()
     fig_price = plot_price_convergence(
         results,
+        results_trino,
         benchmarks=benchmarks,
     )
     plot_build_time = perf_counter() - t_graph
@@ -339,6 +380,7 @@ with st.expander("Advanced diagnostics"):
         fig_signed = plot_signed_error(
             results,
             benchmark,
+            results_trino
         )
 
         st.pyplot(fig_signed, width='content')

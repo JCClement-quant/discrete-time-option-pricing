@@ -18,10 +18,11 @@ The project emphasizes:
 | Jarrow–Rudd          | ✓ | ✓ |        ✓         |        ✓         |
 | Tian 1993            | ✓ | ✓ |        ✓         |        ✓         |
 | Leisen-Reimer        | ✓ | ✓ |        ✓         |        ✓         |
-| Black-Merton-Scholes | ✓ |  x  |         ✓         |         ✓         |
+| Black-Merton-Scholes | ✓ |  x  |         ✓         |         x         |
 | Barone Adessi-Whiley | ✓ | x |        BMS        |         ✓         |
 | Ju-Zhong | ✓ | x |        BMS        |         ✓         |
 | Tian 1999 | ✓ | ✓ |        ✓        |         ✓         |
+| Kamrad-Ritchken | ✓ | ✓ |        ✓        |         ✓         |
 
 The current implementation supports:
 
@@ -89,7 +90,7 @@ It supports:
 - European and American exercise;
 - call and put pricing;
 - continuous dividend yield;
-- graphical inspection of small binomial trees.
+- graphical inspection of small binomial and trinomial trees.
 
 ### Page Cpp 🧮 Cpp High-Performance Pricing
 
@@ -97,7 +98,7 @@ It supports:
 - European and American exercise;
 - call and put pricing;
 - continuous dividend yield;
-- CRR averaged, JR, TIAN93, LR prices, TIAN99 for N>1000;
+- CRR averaged, JR, TIAN93, LR prices, TIAN99 and Kamrad-Ritchken for N>1000;
 - BMS benchmark for European option;
 - BAW and JZ benchmarks for American option;
 - convergence, absolute and relative error;
@@ -235,9 +236,13 @@ The compiled extension exposes:
 - `TIAN93_cpp_price`
 - `LR_cpp_price`
 - `TIAN99_cpp_price`
+- `KR_cpp_price`
 - `ConvergenceResults`
+- `KRConfig`
 - `binomial_convergence`
 - `binomial_convergence_unthreaded`
+- `trinomial_convergence`
+- `trinomial_convergence_unthreaded`
 
 Example Python usage:
 
@@ -294,8 +299,6 @@ The tests cover:
 
 ## Planned extensions
 
-- trinomial trees
-- analytical and numerical Greeks
 - discrete-dividend handling
 - batch option pricing
 - portable build configuration
@@ -354,7 +357,8 @@ The tests cover:
 
 Active development.
 
-The CRR, Jarrow–Rudd, Tian-1993, Tian-1999 and LR models are operational in both Python and C++.
+The CRR, Jarrow–Rudd, Tian-1993, Tian-1999, Leisen-Reimer and Kamrad-Ritchken models are operational in both Python 
+and C++.
 BMS, BAW and JZ are operational in Python.
 
 The project currently supports:
@@ -362,7 +366,7 @@ The project currently supports:
 - European and American options;
 - call and put payoffs;
 - continuous dividend yield;
-- full-tree visualization;
+- full-tree binomial/trinomial visualization;
 - Black–Scholes–Merton convergence testing;
 - interactive Streamlit pricing;
 - high-performance C++ pricing;

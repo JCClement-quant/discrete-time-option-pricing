@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 #include "binomial_pricer.h"
 #include "convergence_results.h"
+#include "trinomial_pricer.h"
 
 namespace py = pybind11;
 using namespace discrete_models;
@@ -42,7 +43,7 @@ PYBIND11_MODULE(discrete_models, module) {
 
     // Linkage of the MarketData structure
     py::class_<MarketData>(module, "MarketData")
-        .def(py::init<>()) //Empty MarketData created !! No enough for an aggregated structure
+        .def(py::init<>()) //Empty MarketData created !! Not enough for an aggregated structure
         .def(py::init([] (const double spot,
                             const double rate,
                             const double dividend_yield,
@@ -64,7 +65,7 @@ PYBIND11_MODULE(discrete_models, module) {
 
     // Linkage of TreeConfig
     py::class_<TreeConfig>(module, "TreeConfig")
-        .def(py::init<>()) //Empty MarketData created !! No enough for an aggregated structure
+        .def(py::init<>()) //Empty TreeConfig created !! Not enough for an aggregated structure
         .def(py::init( [] (const int steps) {
             return TreeConfig {
                 steps
@@ -74,6 +75,11 @@ PYBIND11_MODULE(discrete_models, module) {
             py::arg("steps")
         )
         .def_readwrite("steps", &TreeConfig::steps);
+
+    // Linkage de KRConfig
+    py::class_<KRconfig>(module, "KRConfig")
+        .def(py::init<>())  // Default ctor
+        .def_readwrite("the_lambda", &KRconfig::the_lambda);
 
     // CRR
     module.def("CRR_cpp_price", &CRR_price, py::arg("option"), py::arg("market"),
@@ -99,6 +105,11 @@ PYBIND11_MODULE(discrete_models, module) {
     module.def("TIAN99_cpp_price", &TIAN99_price, py::arg("option"), py::arg("market"),
         py::arg("treeconfig"));
 
+    //Kamrad-Ritchken
+    module.def("KR_cpp_price", &Kamrad_Ritchken, py::arg("option"), py::arg("market"),
+        py::arg("treeconfig"), py::arg("krconfig") = KRconfig{});
+
+
     // Linkage of the ConvergenceResults structure
     py::class_<ConvergenceResults>(module, "ConvergenceResults")
         .def(py::init<>()) //Empty ConvergenceResults created !! No enough for an aggregated structure
@@ -108,9 +119,11 @@ PYBIND11_MODULE(discrete_models, module) {
                             std::vector<double> jarrow_rudd,
                             std::vector<double> tian93,
                             std::vector<double> leiser_reimer,
-                            std::vector<double> tian99) {
+                            std::vector<double> tian99,
+                            std::vector<double> kamrad_ritchken) {
                                 return ConvergenceResults {
-                                    steps,crr,crr_averaged,jarrow_rudd, tian93, leiser_reimer, tian99
+                                    steps,crr,crr_averaged,jarrow_rudd, tian93, leiser_reimer,
+                                    tian99, kamrad_ritchken
                                 };
                             }
                             ),
@@ -120,7 +133,8 @@ PYBIND11_MODULE(discrete_models, module) {
                             py::arg("jarrow_rudd"),
                             py::arg("tian93"),
                             py::arg("leiser_reimer"),
-                            py::arg("tian99")
+                            py::arg("tian99"),
+                            py::arg("kamrad_ritchken")
         )
         .def_readwrite("steps", &ConvergenceResults::steps)
         .def_readwrite("crr", &ConvergenceResults::crr)
@@ -128,16 +142,26 @@ PYBIND11_MODULE(discrete_models, module) {
         .def_readwrite("jarrow_rudd", &ConvergenceResults::jarrow_rudd)
         .def_readwrite("tian93", &ConvergenceResults::tian93)
         .def_readwrite("leisen_reimer", &ConvergenceResults::leisen_reimer)
-        .def_readwrite("tian99", &ConvergenceResults::tian99);
+        .def_readwrite("tian99", &ConvergenceResults::tian99)
+        .def_readwrite("kamrad_ritchken", &ConvergenceResults::kamrad_ritchken);
 
     // Convergence functions
     module.def("Binomial_Convergence", &binomial_convergence, py::arg("option"), py::arg("market"),
         py::arg("steps_grid"),py::call_guard<py::gil_scoped_release>());
 
-    // TEMP Convergence functions
+    module.def("Trinomial_Convergence", &trinomial_convergence, py::arg("option"), py::arg("market"),
+        py::arg("steps_grid"), py::arg("krconfig"),py::call_guard<py::gil_scoped_release>());
+
+    // Unthreaeded Convergence functions
     module.def("Binomial_Convergence_Unthreaded", &binomial_convergence_unthreaded, py::arg("option"),
         py::arg("market"),
         py::arg("steps_grid"),
+        py::call_guard<py::gil_scoped_release>());
+
+    module.def("Trinomial_Convergence_Unthreaded", &trinomial_convergence_unthreaded, py::arg("option"),
+        py::arg("market"),
+        py::arg("steps_grid"),
+        py::arg("krconfig"),
         py::call_guard<py::gil_scoped_release>());
 }
 

@@ -79,9 +79,25 @@ ConvergenceResults binomial_convergence(const discrete_models::VanillaOption &op
     return results;
 }
 
+ConvergenceResults trinomial_convergence(const discrete_models::VanillaOption &option,
+    const discrete_models::MarketData &market_data, const std::vector<int> &steps_grid,
+    const discrete_models::KRconfig &krconfig) {
+
+    ConvergenceResults results;
+    results.steps = steps_grid;
+    results.kamrad_ritchken.reserve(steps_grid.size());
+
+    for (const int steps : steps_grid) {
+        const discrete_models::TreeConfig config{steps};
+        double kr_n = discrete_models::Kamrad_Ritchken(option, market_data, config, krconfig);
+        results.kamrad_ritchken.push_back(kr_n);
+    }
+    return results;
+}
+
 ConvergenceResults binomial_convergence_unthreaded(const discrete_models::VanillaOption &option,
-    const discrete_models::MarketData &market_data,
-    const std::vector<int> &steps_grid
+                                                   const discrete_models::MarketData &market_data,
+                                                   const std::vector<int> &steps_grid
 )
 {
     ConvergenceResults results;
@@ -115,3 +131,18 @@ ConvergenceResults binomial_convergence_unthreaded(const discrete_models::Vanill
     return results;
 }
 
+ConvergenceResults trinomial_convergence_unthreaded(const discrete_models::VanillaOption &option,
+    const discrete_models::MarketData &market_data, const std::vector<int> &steps_grid,
+    const discrete_models::KRconfig &krconfig) {
+
+    ConvergenceResults results;
+    results.steps = steps_grid;
+    results.kamrad_ritchken.reserve(steps_grid.size());
+
+    for (const int steps : steps_grid) {
+        const discrete_models::TreeConfig config{steps};
+        double kr_n = discrete_models::Kamrad_Ritchken(option, market_data, config, krconfig);
+        results.kamrad_ritchken.push_back(kr_n);
+    }
+    return results;
+}

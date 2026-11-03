@@ -8,10 +8,11 @@ from src.payoffs import vanilla_payoff
 from src.validation import validate_option_inputs
 from src.functions import peizer_pratt_inversion
 from scipy.optimize import brentq
+from src.configs import KRConfig
 
 OptionType = Literal["Call", "Put"]
 ExerciseStyle = Literal["European", "American"]
-ModelType = Literal["CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer", "Tian-1999"]
+ModelType = Literal["CRR", "Jarrow-Rudd", "Tian-1993", "Leisen-Reimer", "Tian-1999", "Trinomial-Kamrad-Ritchken"]
 
 @dataclass(frozen=True)
 class OptionSpec:
@@ -535,7 +536,7 @@ def tian99_tree(spec: OptionSpec) -> BinomialTreeResult:
         the_lambda=the_lambda
     )
 
-def build_binomial_tree(spec: OptionSpec):
+def build_tree(spec: OptionSpec):
     match spec.model:
         case "CRR":
             return crr_tree(spec)
@@ -551,6 +552,9 @@ def build_binomial_tree(spec: OptionSpec):
 
         case "Tian-1999":
             return tian99_tree(spec)
+
+        case "Trinomial-Kamrad-Ritchken":
+            return Trinomial_Kamrad_Ritchken_tree(spec)
 
         case _:
             raise ValueError(
@@ -1050,3 +1054,125 @@ def JZ_Pricer(spec: OptionSpec, spot:float, phi:int) -> float:
     )
 
     return european_price + premium
+
+@dataclass
+class TrinomialTreeResult:
+    spot_tree: np.ndarray
+    option_tree: np.ndarray
+    exercise_tree: np.ndarray
+    intrinsic_tree: np.ndarray
+    u: float
+    m: float
+    d: float
+    p_u: float
+    p_m: float
+    p_d: float
+    dt: float
+    discount: float
+    the_lambda: float
+
+def Trinomial_Kamrad_Ritchken_price(spec: OptionSpec, config : KRConfig = KRConfig()) -> float:
+    """
+    Price a vanilla option with a Trinomial Kamrad-Ritchken recombining tree.
+    """
+    result = Trinomial_Kamrad_Ritchken_tree(spec, config)
+    return float(result.option_tree[0, 0])
+
+def Trinomial_Kamrad_Ritchken_tree(spec : OptionSpec, config : KRConfig = KRConfig()) -> TrinomialTreeResult:
+    """
+        Build the Trinomial Kamrad-Ritchken spot tree and option value tree.
+
+        Returns
+        -------
+        TrinomialTreeResult
+            Full tree result, suitable for visualization and diagnostics.
+        """
+    validate_option_inputs(
+        spot=spec.spot,
+        strike=spec.strike,
+        maturity=spec.maturity,
+        rate=spec.rate,
+        volatility=spec.volatility,
+        steps=spec.steps,
+        option_type=spec.option_type,
+        exercise_style=spec.exercise_style,
+        model="Trinomial-Kamrad-Ritchken",
+    )
+
+    if spec.volatility == 0.0:
+        raise ValueError("Trinomial-Kamrad-Ritchken tree is not defined for zero volatility in this implementation.")
+
+    dt = spec.maturity / spec.steps
+    carry_rate = spec.rate - spec.dividend_yield
+    the_lambda = config.the_lambda
+    mu = spec.rate - spec.dividend_yield - 1/2 * spec.volatility **2
+    discount = math.exp(-spec.rate * dt)
+
+    u = math.exp(the_lambda * spec.volatility * math.sqrt(dt))
+    # d = math.exp(- the_lambda * spec.volatility * math.sqrt(dt))
+    m = 1
+    p_u = 1 / (2 * the_lambda **2) + mu * math.sqrt(dt) / (2 * the_lambda * spec.volatility)
+    p_d = 1 / (2 * the_lambda **2) - mu * math.sqrt(dt) / (2 * the_lambda * spec.volatility)
+    p_m = 1 - 1 / the_lambda **2
+
+    if not math.isclose(
+            p_u + p_m + p_d,
+            1.0,
+            rel_tol=1e-12,
+            abs_tol=1e-12,
+    ):
+        raise ValueError(
+            "Kamrad-Ritchken probabilities do not sum to one."
+        )
+
+    n = spec.steps
+
+    spot_tree = np.full((n + 1, 2 * n + 1), np.nan)
+    option_tree = np.full((n + 1, 2 * n + 1), np.nan)
+    intrinsic_tree = np.full((n + 1, 2 * n + 1), np.nan)
+    exercise_tree = np.full((n + 1, 2 * n + 1),False,dtype=bool)
+
+    # Build spot tree
+    for i in range(n + 1):
+        for j in range(2 * i + 1):
+            spot_tree[i, j] = spec.spot * (u ** (i - j))
+
+    # Terminal payoff
+    for j in range(2 * n + 1):
+        intrinsic = vanilla_payoff(spot_tree[n, j], spec.strike, spec.option_type)
+        option_tree[n, j] = intrinsic
+        intrinsic_tree[n, j] = intrinsic
+
+    allow_early_exercise = spec.exercise_style == "American"
+
+    # Backward induction
+    for i in range(n - 1, -1, -1):
+        for j in range(2 * i + 1):
+            continuation_value = discount * (
+                    p_u * option_tree[i + 1, j] + p_m * option_tree[i + 1, j + 1] + p_d * option_tree[i + 1, j + 2]
+            )
+
+            intrinsic_value = vanilla_payoff(spot_tree[i, j], spec.strike, spec.option_type)
+            intrinsic_tree[i, j] = intrinsic_value
+
+            if allow_early_exercise:
+                option_tree[i, j] = max(continuation_value, intrinsic_value)
+                exercise_tree[i, j] = intrinsic_value > continuation_value
+            else:
+                option_tree[i, j] = continuation_value
+
+    return TrinomialTreeResult(
+        spot_tree=spot_tree,
+        option_tree=option_tree,
+        exercise_tree=exercise_tree,
+        intrinsic_tree=intrinsic_tree,
+        u=u,
+        m=m,
+        d=1/u,
+        p_u=p_u,
+        p_m=p_m,
+        p_d=p_d,
+        dt=dt,
+        discount=discount,
+        the_lambda=the_lambda
+    )
